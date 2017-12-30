@@ -1,0 +1,11 @@
+logs
+*.log
+pids
+node_modules
+.npm
+*.dat
+config
+views
+public
+.idea/*
+.DS_Store
