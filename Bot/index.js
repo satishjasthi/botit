@@ -5,6 +5,8 @@ const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
 const sendTextMessage = require('./server/helper/sendTextMessage');
+const sendQuickReplies = require('./server/helper/sendQuickReplies');
+const sendLocationQuickReply = require('./server/helper/sendLocationQuickReply');
 
 class Bot extends EventEmitter {
 	
@@ -43,6 +45,14 @@ class Bot extends EventEmitter {
 
 	reply (recipientId, messageText) {
 		sendTextMessage.call(this, recipientId, messageText);
+	}
+
+	promptQuickReplies (recipientId, type, { promptText, quickReplies }) {
+		sendQuickReplies.call(this, recipientId, type, { promptText, quickReplies });
+	}
+
+	promptLocation (recipientId, { promptText }) {
+		sendLocationQuickReply.call(this, recipientId, { promptText })
 	}
 
 	init () {
