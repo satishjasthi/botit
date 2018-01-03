@@ -69,16 +69,48 @@ class ConversationNode {
 		this.exitTo = exitTo;
 	}
 
+	/**
+	 * Chat node entry guard
+	 * @param to {ChatNode}
+	 * @param from {ChatNode}
+	 * @param next {function}
+	 * @returns {boolean | undefined}
+	 */
 	beforeNodeEnter (to, from, next) {
 		if (!this.beforeEnter) return true;
-		return this.beforeEnter.call(this, to, from, next);
+		this.beforeEnter.call(this, to, from, next);
+	}
+
+
+	/**
+	 * Chat node exit guard
+	 * @param to {ChatNode}
+	 * @param from {ChatNode}
+	 * @param next {function}
+	 * @returns {boolean | undefined}
+	 */
+	beforeNodeExit (to, from, next) {
+		if (!this.beforeExit) return true;
+		this.beforeExit.call(this, to, from, next);
 	}
 }
 
+
+/**
+ * Validate if a required argument is missing at node creation step.
+ * @param argName {string} - Name of the argument
+ * @param arg {any}
+ */
 function validate (argName, arg) {
 	if (arg === null || typeof arg === 'undefined') throw new InvalidNode(argName, arg);
 }
 
+
+/**
+ * Get query params as a mapped object from the urlString
+ * @param pathUrl {string}
+ * @returns {*}
+ */
 function extractParams (pathUrl) {
 	const paramList = pathUrl.split('?');
 	if (paramList.length < 1) return null;
