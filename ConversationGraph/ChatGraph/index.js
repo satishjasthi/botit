@@ -31,7 +31,9 @@ class ChatGraph {
 		if (( this.strict || forced ) && this.active.exitTo.indexOf(name) === -1) {
 			throw new UnreachableNode(from.name, to.name);
 		}
-		this.exitGuard(to, from, this.entryGuard);
+		this.exitGuard(to, from, this._next({ defaultName: to.name, exit: true }));
+		this.entryGuard(to, from, this._next({ defaultName: to.name, entry: true }));
+		this.confirmNav(to, from);
 	}
 
 	/**
@@ -39,29 +41,33 @@ class ChatGraph {
 	 * This is an exit guard which checks if conditions are met for exiting a node.
 	 * @param from {ChatNode}
 	 * @param from.beforeExit {function}
+	 * @param from.name {string}
 	 * @param to {ChatNode}
-	 * @param entryGuard {function}
+	 * @param next {function}
 	 */
-	exitGuard (to, from, entryGuard) {
+	exitGuard (to, from, next) {
 		if (!from.beforeExit) {
-			this.entryGuard(to);
+			next();
 		} else {
-			from.beforeExit(to, from, this.entryGuard);
+			from.beforeExit(to, from, next);
 		}
 	}
 
+
 	/**
 	 * Before node transition, entry and exit guard functions are to be executed.
-	 * This is an entry guard which checks if conditions are met for entering into a node.
-	 * @param node {ChatNode} - Node to transition to.
-	 * @param node.beforeEnter {function} - Call this function to check if transition to this node is allowed.
-	 * @param node.name {string} - name of the node.
+	 * This is an entry guard which checks if conditions are met for entering a node.
+	 * @param from {ChatNode}
+	 * @param to {ChatNode}
+	 * @param to.beforeEnter {function}
+	 * @param to.name {function}
+	 * @param next {function}
 	 */
-	entryGuard (node) {
-		if (!node.beforeEnter) {
-			this._next(node.name)();
+	entryGuard (to, from, next) {
+		if (!to.beforeEnter) {
+			next();
 		} else {
-			node.beforeEnter(node, this.active, this._next(node.name));
+			to.beforeEnter(to, from, next);
 		}
 	}
 
@@ -82,9 +88,30 @@ class ChatGraph {
 	 * @private
 	 */
 	_getNodeByName (name) {
-		return this.graph[name];
+		return this.graph[name].node;
 	}
 
+	/**
+	 * @param name {string}
+	 * @param type {string}
+	 * @param state {boolean}
+	 * @private
+	 */
+	_setNodeNavStatus (name, type, state) {
+		this.graph[name][type] = state;
+	}
+
+	/**
+	 *
+	 * @param name
+	 * @param type
+	 * @returns {*}
+	 * @private
+	 */
+	_getNodeNavStatus (name, type) {
+		console.log(name);
+		return this.graph[name][type]
+	}
 
 	/**
 	 * A closure that wraps value of defaultName,
@@ -92,15 +119,38 @@ class ChatGraph {
 	 *
 	 * Facilitates the transition from a node to another
 	 * Doesn't proceed with transition if node name is a boolean false.
-	 * @param defaultName
+	 * @param defaultName {string}
+	 * @param entry {boolean}
+	 * @param exit {boolean}
 	 * @returns {Function}
 	 */
-	_next (defaultName) {
+	_next ({ defaultName, entry, exit }) {
 		const self = this;
-		return function (name = defaultName) {
-			if (name === false) return 0;
-			self.historyUpdate(self.active);
-			self.active = self._getNodeByName(name);
+		return function (name) {
+			name = (name !== false) ? defaultName : name;
+			if (exit) {
+				if (name === false) {
+					self._setNodeNavStatus(defaultName, 'exitState', false);
+				} else {
+					self._setNodeNavStatus(name, 'exitState', exit);
+				}
+			}
+			if (entry) {
+				if (name === false) {
+					self._setNodeNavStatus(defaultName, 'entryState', false);
+				} else {
+					self._setNodeNavStatus(name, 'entryState', entry);
+				}
+			}
+		}
+	}
+
+	confirmNav (to, from) {
+		const toNodeEntryState = this._getNodeNavStatus(to.name, 'entryState');
+		const fromNodeExitState = this._getNodeNavStatus(from.name, 'entryState');
+		if (toNodeEntryState && fromNodeExitState) {
+			this.historyUpdate(this.active);
+			this.active = this._getNodeByName(to.name);
 		}
 	}
 }
@@ -116,7 +166,11 @@ class ChatGraph {
 function setupGraph (nodes) {
 	const graph = {};
 	for (let node of nodes) {
-		graph[node.name] = node;
+		graph[node.name] = {
+			node,
+			exitState: true,
+			entryState: true
+		};
 	}
 	return graph;
 }
