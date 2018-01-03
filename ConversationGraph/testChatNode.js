@@ -6,22 +6,22 @@ const chatGraph = new ChatGraph({
 		name: 'init',
 		path: '/',
 		message: 'hey',
-		exitTo: ['browse']
+		exitTo: ['browse', 'select']
 	}, {
 		name: 'browse',
-		path: '/browse',
+		path: 'browse/',
 		message: 'see these things',
 		exitTo: ['select'],
 		beforeEnter: function (to, from, next) {
 			if (from.name === 'init') {
-				next();
+				next('init');
 			} else {
 				next(false);
 			}
 		}
 	}, {
 		name: 'select',
-		path: '/select',
+		path: 'select/',
 		message: 'see these things too'
 	}]
 });

@@ -38,12 +38,14 @@ class ChatGraph {
 		/** @type {string} */
 		const toNodeName = to.name;
 
-		if (( this.strict || forced ) && from.exitTo.indexOf(name) === -1) {
-			throw new UnreachableNode(from.name, to.name);
+		if (from.name !== to.name) {
+			if (( this.strict || forced ) && from.exitTo.indexOf(name) === -1) {
+				throw new UnreachableNode(from.name, to.name);
+			}
+			ChatGraph.exitGuard(to, from, this._next({ defaultName: fromNodeName, exit: true }));
+			ChatGraph.entryGuard(to, from, this._next({ defaultName: toNodeName, entry: true }));
+			this.confirmNav(to, from);
 		}
-		ChatGraph.exitGuard(to, from, this._next({ defaultName: fromNodeName, exit: true }));
-		ChatGraph.entryGuard(to, from, this._next({ defaultName: toNodeName, entry: true }));
-		this.confirmNav(to, from);
 	}
 
 	/**
@@ -101,6 +103,7 @@ class ChatGraph {
 		return this.graph[name].node;
 	}
 
+
 	/**
 	 * @param name {string}
 	 * @param type {string}
@@ -110,6 +113,7 @@ class ChatGraph {
 	_setNodeNavStatus (name, type, state) {
 		this.graph[name][type] = state;
 	}
+
 
 	/**
 	 *
@@ -136,21 +140,30 @@ class ChatGraph {
 	 */
 	_next ({ defaultName, entry, exit }) {
 		const self = this;
-		return function (name) {
-			name = (name !== false) ? defaultName : name;
-			if (exit) {
-				if (name === false) {
-					self._setNodeNavStatus(defaultName, 'exitState', false);
-				} else {
-					self._setNodeNavStatus(name, 'exitState', exit);
-				}
+		return function (name, forced = false) {
+			if (name !== false && typeof name !== 'undefined' && name !== defaultName) {
+				self.go(name, forced);
+			} else {
+				name = (name !== false) ? defaultName : name;
+				self.setNodeByStateName(name, defaultName, exit, 'exitState');
+				self.setNodeByStateName(name, defaultName, entry, 'entryState');
 			}
-			if (entry) {
-				if (name === false) {
-					self._setNodeNavStatus(defaultName, 'entryState', false);
-				} else {
-					self._setNodeNavStatus(name, 'entryState', entry);
-				}
+		}
+	}
+
+	/**
+	 * This method is created for re-usability in the .next() method.
+	 * @param {string} name
+	 * @param {string} defaultName
+	 * @param {boolean} guardResult
+	 * @param {string} guardTypeStr
+	 */
+	setNodeByStateName (name, defaultName, guardResult, guardTypeStr) {
+		if (guardResult) {
+			if (name === false) {
+				this._setNodeNavStatus(defaultName, guardTypeStr, false);
+			} else {
+				this._setNodeNavStatus(name, guardTypeStr, guardResult);
 			}
 		}
 	}
