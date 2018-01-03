@@ -13,7 +13,7 @@ const chatGraph = new ChatGraph({
 		message: 'see these things',
 		exitTo: ['select'],
 		beforeEnter: function (to, from, next) {
-			if (from.name === 'potato') {
+			if (from.name === 'init') {
 				next();
 			} else {
 				next(false);

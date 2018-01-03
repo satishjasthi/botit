@@ -26,13 +26,23 @@ class ChatGraph {
 	 * @param forced {boolean} - if strict is false, but strictness is to be enforced on a node level, set this flag to true
 	 */
 	go (name, forced = false) {
+		/** @type {ChatNode} */
 		const from = this.active;
+
+		/** @type {string} */
+		const fromNodeName = from.name;
+
+		/** @type {ChatNode} */
 		const to = this._getNodeByName(name);
-		if (( this.strict || forced ) && this.active.exitTo.indexOf(name) === -1) {
+
+		/** @type {string} */
+		const toNodeName = to.name;
+
+		if (( this.strict || forced ) && from.exitTo.indexOf(name) === -1) {
 			throw new UnreachableNode(from.name, to.name);
 		}
-		this.exitGuard(to, from, this._next({ defaultName: to.name, exit: true }));
-		this.entryGuard(to, from, this._next({ defaultName: to.name, entry: true }));
+		ChatGraph.exitGuard(to, from, this._next({ defaultName: fromNodeName, exit: true }));
+		ChatGraph.entryGuard(to, from, this._next({ defaultName: toNodeName, entry: true }));
 		this.confirmNav(to, from);
 	}
 
@@ -45,7 +55,7 @@ class ChatGraph {
 	 * @param to {ChatNode}
 	 * @param next {function}
 	 */
-	exitGuard (to, from, next) {
+	static exitGuard (to, from, next) {
 		if (!from.beforeExit) {
 			next();
 		} else {
@@ -63,7 +73,7 @@ class ChatGraph {
 	 * @param to.name {function}
 	 * @param next {function}
 	 */
-	entryGuard (to, from, next) {
+	static entryGuard (to, from, next) {
 		if (!to.beforeEnter) {
 			next();
 		} else {
@@ -109,9 +119,9 @@ class ChatGraph {
 	 * @private
 	 */
 	_getNodeNavStatus (name, type) {
-		console.log(name);
 		return this.graph[name][type]
 	}
+
 
 	/**
 	 * A closure that wraps value of defaultName,
@@ -120,8 +130,8 @@ class ChatGraph {
 	 * Facilitates the transition from a node to another
 	 * Doesn't proceed with transition if node name is a boolean false.
 	 * @param defaultName {string}
-	 * @param entry {boolean}
-	 * @param exit {boolean}
+	 * @param [entry] {boolean}
+	 * @param [exit] {boolean}
 	 * @returns {Function}
 	 */
 	_next ({ defaultName, entry, exit }) {
@@ -145,9 +155,15 @@ class ChatGraph {
 		}
 	}
 
+	/**
+	 * When the guards are resolved, the navigation from ChatNodes can be fulfilled
+	 * This method updates the history and active node.
+	 * @param to
+	 * @param from
+	 */
 	confirmNav (to, from) {
 		const toNodeEntryState = this._getNodeNavStatus(to.name, 'entryState');
-		const fromNodeExitState = this._getNodeNavStatus(from.name, 'entryState');
+		const fromNodeExitState = this._getNodeNavStatus(from.name, 'exitState');
 		if (toNodeEntryState && fromNodeExitState) {
 			this.historyUpdate(this.active);
 			this.active = this._getNodeByName(to.name);
@@ -168,8 +184,8 @@ function setupGraph (nodes) {
 	for (let node of nodes) {
 		graph[node.name] = {
 			node,
-			exitState: true,
-			entryState: true
+			exitState: false,
+			entryState: false
 		};
 	}
 	return graph;

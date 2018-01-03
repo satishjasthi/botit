@@ -1,14 +1,21 @@
 const InvalidNode = require('../Errors/ChatNodeErrors');
 
-class ConversationNode {
-
+/**
+ * @typedef ChatNode
+ * @type {string} name
+ * @type {string} path
+ * @type {object} message
+ * @type {[string]} exitTo
+ * @type {null|object} params
+ * @type {null|function} beforeEnter
+ * @type {null|function} beforeExit
+ */
+class ChatNode {
 	/**
 	 *
 	 * @param name - Name of the chat-node.
 	 * @param path - Name of the path.
 	 * @param message - The message to be sent when this node is visited.
-	 * @param children - The dependent nodes that can trigger only if this node was previously visited
-	 * @param entryFrom - The nodes from which this node is allowed.
 	 * @param exitTo - The nodes to which transition is allowed once this node is active.
 	 * @param beforeEnter - The function to be called before the node is entered
 	 * @param beforeExit - The function to be called after the node is exited
@@ -17,8 +24,6 @@ class ConversationNode {
 		             name,
 		             path,
 		             message,
-		             children = [],
-		             entryFrom = [],
 		             exitTo = [],
 		             beforeEnter = null,
 		             beforeExit = null
@@ -28,9 +33,7 @@ class ConversationNode {
 		validate('message', message);
 		this.name = name.trim().toLowerCase();
 		this.path = path.trim().toLowerCase();
-		this.children = children;
 		this.message = message;
-		this.entryFrom = entryFrom;
 		this.exitTo = exitTo;
 		this.params = null;
 		this.beforeEnter = beforeEnter;
@@ -53,21 +56,6 @@ class ConversationNode {
 		this.message = message;
 	}
 
-	/**
-	 * Set entryForm property
-	 * @param entryFrom
-	 */
-	setEntryFrom (entryFrom) {
-		this.entryFrom = entryFrom;
-	}
-
-	/**
-	 * Set exitTo property
-	 * @param exitTo
-	 */
-	setExitTo (exitTo) {
-		this.exitTo = exitTo;
-	}
 
 	/**
 	 * Chat node entry guard
@@ -124,4 +112,4 @@ function extractParams (pathUrl) {
 	return params
 }
 
-module.exports = ConversationNode;
+module.exports = ChatNode;
