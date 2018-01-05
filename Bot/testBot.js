@@ -10,13 +10,7 @@ bot.on('text-message', ({ senderID, messageText }) => {
 	switch (messageText) {
 		case 'QR_TEST': bot.promptQuickReplies(senderID, {
 			promptText: 'Do you like what you see?',
-			quickReplies: [{
-				title: 'Yes',
-				payload: '1'
-			}, {
-				title: 'No',
-				payload: '0'
-			}]
+			quickReplies: [{ title: 'Yes', payload: '1'}, { title: 'No', payload: '0' }]
 		}); break;
 		case 'QR_LOC': bot.promptLocation(senderID, {
 			promptText: 'Where do you live?'
