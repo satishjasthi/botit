@@ -9,7 +9,7 @@ const chatGraph = new ChatGraph({
 		exitTo: ['browse', 'select']
 	}, {
 		name: 'browse',
-		path: '/browse',
+		path: 'browse',
 		message: 'see these things',
 		exitTo: ['select'],
 		beforeEnter: function (to, from, next) {
@@ -21,7 +21,7 @@ const chatGraph = new ChatGraph({
 		}
 	}, {
 		name: 'select',
-		path: '/select',
+		path: 'select',
 		message: 'see these things too'
 	}]
 });
