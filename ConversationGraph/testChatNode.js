@@ -6,7 +6,7 @@ const chatGraph = new ChatGraph({
 		name: 'init',
 		path: '/',
 		message: 'hey',
-		exitTo: ['browse']
+		exitTo: ['browse', 'select']
 	}, {
 		name: 'browse',
 		path: '/browse',
@@ -14,7 +14,7 @@ const chatGraph = new ChatGraph({
 		exitTo: ['select'],
 		beforeEnter: function (to, from, next) {
 			if (from.name === 'init') {
-				next();
+				next('select');
 			} else {
 				next(false);
 			}
@@ -29,3 +29,4 @@ const chatGraph = new ChatGraph({
 console.log(chatGraph.active);
 chatGraph.go('browse');
 console.log(chatGraph.active);
+console.log(chatGraph.matchNodeWithQuery('/browse?item=12&age=5'));

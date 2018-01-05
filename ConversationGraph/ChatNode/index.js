@@ -32,12 +32,22 @@ class ChatNode {
 		validate('path', path);
 		validate('message', message);
 		this.name = name.trim().toLowerCase();
-		this.path = path.trim().toLowerCase();
+		this.path = this.setPath(path);
 		this.message = message;
 		this.exitTo = exitTo;
 		this.params = null;
 		this.beforeEnter = beforeEnter;
 		this.beforeExit = beforeExit;
+	}
+
+	/**
+	 *
+	 * @param path
+	 * @returns {*}
+	 */
+	setPath (path) {
+		path = path.trim().toLowerCase();
+		return (path[0] !== '/') ? `/${path}` : path;
 	}
 
 	/**

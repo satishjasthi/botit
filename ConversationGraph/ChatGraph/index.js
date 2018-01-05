@@ -169,6 +169,21 @@ class ChatGraph {
 			this.active = this._getNodeByName(to.name);
 		}
 	}
+
+
+	/**
+	 * Match a node path if a url path is provided.
+	 * @param urlPath
+	 */
+	matchNodeWithQuery (urlPath) {
+		const {path, params} = queryParse(urlPath);
+		return this._nodes.filter(node => {
+			return node.path === path
+		}).map(node => {
+			node.params = params;
+			return node;
+		});
+	}
 }
 
 
@@ -189,6 +204,55 @@ function setupGraph (nodes) {
 		};
 	}
 	return graph;
+}
+
+
+/**
+ * extract path and extract query params as a key/value object
+ * @param {string }urlPath
+ * @returns {{path: string, params: object}}
+ */
+function queryParse (urlPath) {
+	if (typeof urlPath !== 'string') return {};
+	const rawPath = urlPath.split('/');
+	const path = getPathFromUrl(rawPath);
+	const pathParts = rawPath.length;
+	const trail = rawPath[pathParts - 1].split('?');
+	const params = {};
+	let paramArr = [];
+	let key = '';
+	let value = '';
+	if (trail.length > 1) { paramArr =  trail[1].split('&'); }
+	for(let i = 0; i < paramArr.length; i++) {
+		[key, value] = paramArr[i].split('=');
+		params[key] = value;
+	}
+	return {path, params};
+}
+
+
+/**
+ * Get Path filtered off of its query params
+ * @param {[string]} urlPathParts
+ * @returns string
+ */
+function getPathFromUrl (urlPathParts) {
+	if (!Array.isArray(urlPathParts) || urlPathParts.length === 0) return '';
+	const urlPathPartsCopy = urlPathParts.slice();
+	const lastIdx = urlPathPartsCopy.length - 1;
+	urlPathPartsCopy[lastIdx] = filterQueryParams(urlPathPartsCopy[lastIdx]);
+	return urlPathPartsCopy.join('/');
+}
+
+
+/**
+ * Filters a url's query params
+ * @param {string} queryStr
+ * @returns string
+ */
+function filterQueryParams (queryStr) {
+	if (typeof queryStr !== 'string') return '';
+	return queryStr.split('?')[0]
 }
 
 module.exports = ChatGraph;
