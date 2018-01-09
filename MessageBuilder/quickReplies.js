@@ -9,12 +9,10 @@ const QuickReplyFormatError = require('./Errors').QuickReplyFormatError;
  * @returns {{content_type: string, title: string, payload: string, image_url?:L string}}
  */
 function textQR ({ title, payload, imageUrl }) {
-	const quickReply = {
-		"content_type": "text",
-		"title": title,
-		"payload": payload
-	};
-	if (typeof imageUrl === 'string' && imageUrl.length > 5) { quickReply['image_url'] = imageUrl; }
+	const quickReply = { "content_type": "text", "title": title, "payload": payload };
+	if (typeof imageUrl === 'string' && imageUrl.length > 5) {
+		quickReply['image_url'] = imageUrl;
+	}
 	return quickReply;
 }
 
@@ -25,3 +23,8 @@ function textQR ({ title, payload, imageUrl }) {
 function locationQR () {
 	return { "content_type": "location" }
 }
+
+module.exports = {
+	textQR,
+	locationQR
+};

@@ -13,6 +13,7 @@ class Bot extends EventEmitter {
 	constructor (config) {
 		super();
 		this.config = config;
+		this.name = 'James Bot';
 		this._isVerified = false;
 		this.app = express();
 	}
