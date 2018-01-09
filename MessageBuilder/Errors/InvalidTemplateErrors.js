@@ -5,3 +5,5 @@ class InvalidTemplate extends TypeError {
 		this.name = 'InvalidTemplate';
 	}
 }
+
+module.exports = InvalidTemplate;

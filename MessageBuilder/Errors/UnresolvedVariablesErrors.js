@@ -5,3 +5,5 @@ class UnresolvedVariable extends Error {
 		this.name = 'UnresolvedVariable';
 	}
 }
+
+module.exports = UnresolvedVariable;

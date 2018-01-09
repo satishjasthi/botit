@@ -7,11 +7,9 @@ const HelloWorld = new MessageBuilder({
 		'fallback_0': 'uh oh',
 		'fallback_1': '{{uhOh }}'
 	},
-	data () {
-		return {
-			helloWorld: 'Hello World!',
-			uhOh: 'uh oh!'
-		}
+	data: {
+		helloWorld: 'Hello World!',
+		uhOh: 'uh oh!'
 	},
 	deps: {
 		something: {
