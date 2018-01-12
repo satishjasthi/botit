@@ -16,11 +16,14 @@
   "author": "Facebook",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.5.1",
     "body-parser": "^1.15.0",
     "config": "^1.29.0",
     "ejs": "^2.4.2",
     "express": "^4.13.4",
     "lodash": "^4.17.4",
+    "mongoose": "^4.13.9",
+    "redis": "^2.8.0",
     "request": "^2.72.0"
   },
   "engines": {
