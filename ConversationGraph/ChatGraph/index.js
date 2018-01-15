@@ -5,202 +5,171 @@ const bluebird = require('bluebird');
 
 class ChatGraph {
 	/**
-	 * This creates the basic unit of a chat-flow.
+	 * @description This creates the basic unit of a chat-flow.
+	 * @param {string} userId - The userId of a user
 	 * @param nodes {Array<object>} - Number of nodes in the chat
-	 *
 	 * @param root {string} - The first node in the conversation.
-	 *
-	 * @param mode {boolean} - Controls free flow between chat nodes.
+	 * @param strict {boolean} - Controls free flow between chat nodes.
 	 * If true, nodes will transition on the basis of exitTo and exitFrom
+
+	  * @returns {ChatGraph} itself through promise
 	 */
 	constructor ({ userId, nodes, root = 'init', strict = true }) {
 		this._nodes = nodes.map(node => new ChatNode(node));
 		this.graph = setupGraph(this._nodes);
-		this.active = this._getNodeByName(root);
-        this.strict = strict;
+		this.strict = strict;
 		return this._initHistory(userId, root);
 	}
 
-
+	/**
+	 * @description Initializes history Array for the current user
+	 * @param {string} userId
+	 * @param {string} root
+	 * @private
+	 */
 	_initHistory (userId, root) {
-	    const self = this;
-        return new bluebird((resolve, reject) => {
-            HistoryModel.push(userId, self._getNodeByName(root))
-                .then(data => {
-                    self.history = data;
-                    resolve(self);
-                })
-                .catch(err => {
-                    console.error(err);
-                    reject(err);
-                })
-        })
+    const self = this;
+
+    return new bluebird((resolve, reject) => {
+      const rootNode = self._getNodeByName(root);
+
+      HistoryModel.push(userId, {
+        "name": rootNode.name,
+        "path": rootNode.path
+      }).then(() => {
+        resolve(self);
+      })
+      .catch(err => {
+        console.error(err);
+        reject(err);
+      })
+
+    })
 	}
 
 	/**
-	 * Transitions from a node to another are carried over by this method
-	 * @param name {string} - name of the new node
-	 * @param forced {boolean} - if strict is false, but strictness is to be enforced on a node level, set this flag to true
+	 * @description The exposed routing method, routes user to different ChatNodes if allowed
+	 * @param {string} userId
+	 * @param {string} to
+	 * @param {boolean} [forced=false]
+	 * @returns {Promise|Promise.<T>}
 	 */
-	go (userId, name, forced = false) {
-		/** @type {ChatNode} */
-		const from = this.active;
+	go (userId, to, forced = false) {
+		const self = this;
 
-		/** @type {string} */
-		const fromNodeName = from.name;
+		return HistoryModel.active(userId)
+			.then(data => {
+				const from = data ? data[0].active.name : null;
+				if (from) { return self._go(userId, to, from, forced); }
+				else { bluebird.reject('Invalid node'); }
+			})
+			.catch(err => { bluebird.reject(err) });
+	}
 
-		/** @type {ChatNode} */
-		const to = this._getNodeByName(name);
-
-		/** @type {string} */
-		const toNodeName = to.name;
+	/**
+	 * @description Transitions from a node to another are carried over by this method
+	 * @param {userId} userId - Transition is to be made for user with id = userId
+	 * @param {string} toName - name of the new node
+	 * @param {string} fromName - name of the currently active node
+	 * @param forced {boolean} - if strict is false, but strictness is to be enforced on a node level, set this flag to true	 * @param userId
+	 * @returns {Promise|Promise.<T>}
+	 * @private
+	 */
+	_go (userId, toName, fromName, forced = false) {
+		const self = this;
+		const from = this._getNodeByName(fromName);
+		const to = this._getNodeByName(toName);
 
 		if (from.name !== to.name) {
-			if (( this.strict || forced ) && from.exitTo.indexOf(name) === -1) {
+			if (( this.strict || forced ) && from.exitTo.indexOf(toName) === -1) {
 				throw new UnreachableNode(from.name, to.name);
 			}
-			ChatGraph.exitGuard(to, from, this._next(fromNodeName, userId));
-			ChatGraph.entryGuard(to, from, this._next(toNodeName, userId));
-			this.confirmNav(userId, to, from);
+			return ChatGraph.exitGuard({ from, to })
+				.then(() => { return ChatGraph.entryGuard({ from, to }) })
+				.then(() => { return this.historyUpdate(userId, to) })
+				.then(() => { return bluebird.resolve(self); })
+				.catch(err => { console.error('error', err); });
+		} else {
+			return bluebird.resolve(self);
 		}
 	}
 
 	/**
-	 * Before node transition, entry and exit guard functions are to be executed.
+	 * @description Before node transition, entry and exit guard functions are to be executed.
 	 * This is an exit guard which checks if conditions are met for exiting a node.
 	 * @param from {ChatNode}
 	 * @param from.beforeExit {function}
-	 * @param from.name {string}
 	 * @param to {ChatNode}
-	 * @param next {function}
 	 */
-	static exitGuard (to, from, next) {
+	static exitGuard ({ from, to }) {
 		if (!from.beforeExit) {
-			next();
+			return bluebird.resolve(true);
 		} else {
-			from.beforeExit(to, from, next);
+			return from.beforeExit(from, to);
 		}
 	}
 
 
 	/**
-	 * Before node transition, entry and exit guard functions are to be executed.
+	 * @description Before node transition, entry and exit guard functions are to be executed.
 	 * This is an entry guard which checks if conditions are met for entering a node.
 	 * @param from {ChatNode}
 	 * @param to {ChatNode}
 	 * @param to.beforeEnter {function}
-	 * @param to.name {function}
-	 * @param next {function}
 	 */
-	static entryGuard (to, from, next) {
+	static entryGuard ({ from, to }) {
 		if (!to.beforeEnter) {
-			next();
+			return bluebird.resolve(true);
 		} else {
-			to.beforeEnter(to, from, next);
+			return to.beforeEnter(from, to);
 		}
 	}
 
 
 	/**
-	 * Update the history with each transition.
+	 * @description Update the history with each transition.
+	 * @userId {string} - Update history for user with id = userId
 	 * @param node {ChatNode}
 	 */
 	historyUpdate (userId, node) {
 		// this.history.push(node);
-        const self = this;
-		return HistoryModel.push(userId, node);
+		const self = this;
+		return HistoryModel.push(userId, {
+			"name": node.name,
+			"path": node.path
+		}).then(data => {
+			self.active = node;
+			return bluebird.resolve(data);
+		});
 	}
 
 
 	/**
-	 * Find the node in graph by using the unique node name.
+	 * @description Find the node in graph by using the unique node name.
 	 * @param name - Name of the node to be searched
 	 * @returns {ChatNode}
 	 * @private
 	 */
 	_getNodeByName (name) {
-		return this.graph[name].node;
+		return this.graph[name];
 	}
 
-
-	_getNodeByProp (prop, val) {
-	    for (let nodeName of Object.keys(this.graph)) {
-	        if (this.graph[nodeName][prop] === val) {
-	            return this.graph[nodeName]
-            }
-        }
-        return null;
-    }
-
 	/**
-	 * @param name {string}
-	 * @param type {string}
-	 * @param state {boolean}
-	 * @private
-	 */
-	_setNodeNavStatus (name, type, state) {
-		this.graph[name][type] = state;
-	}
-
-
-	/**
+	 * @description This method can match any prop with given value in the ChatGraph
+	 * use this to match nodes for given path
 	 *
-	 * @param name
-	 * @param type
+	 * @param prop
+	 * @param val
 	 * @returns {*}
 	 * @private
 	 */
-	_getNodeNavStatus (name, type) {
-		return this.graph[name][type]
-	}
-
-
-	/**
-	 * A closure that wraps value of defaultName,
-	 * so that the returned function retains the defaultName as the value of name.
-	 *
-	 * Facilitates the transition from a node to another
-	 * Doesn't proceed with transition if node name is a boolean false.
-	 * @param defaultName {string}
-	 * @returns {Function}
-	 */
-	_next (defaultName, userId) {
-	    const self = this;
-		return function (name = defaultName, id = userId) {
-		    return self.historyUpdate(id, self._getNodeByName(name));
-		}
-	}
-
-	/**
-	 * This method is created for re-usability in the .next() method.
-	 * @param {string} name
-	 * @param {string} defaultName
-	 * @param {boolean} guardResult
-	 * @param {string} guardTypeStr
-	 */
-	setNodeByStateName (name, defaultName, guardResult, guardTypeStr) {
-		if (guardResult) {
-			if (name === false) {
-				this._setNodeNavStatus(defaultName, guardTypeStr, false);
-			} else {
-				this._setNodeNavStatus(name, guardTypeStr, guardResult);
-			}
-		}
-	}
-
-	/**
-	 * When the guards are resolved, the navigation from ChatNodes can be fulfilled
-	 * This method updates the history and active node.
-	 * @param to
-	 * @param from
-	 */
-	confirmNav (to, from) {
-		const toNodeEntryState = this._getNodeNavStatus(to.name, 'entryState');
-		const fromNodeExitState = this._getNodeNavStatus(from.name, 'exitState');
-		if (toNodeEntryState && fromNodeExitState) {
-			this.historyUpdate(this.active);
-			this.active = this._getNodeByName(to.name);
-		}
+	_getNodeByProp (prop, val) {
+    for (let nodeName of Object.keys(this.graph)) {
+      if (this.graph[nodeName][prop] === val) {
+        return this.graph[nodeName]
+      }
+    }
+		return null;
 	}
 
 

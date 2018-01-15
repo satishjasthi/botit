@@ -8,9 +8,9 @@ const historySchema = new Schema({
 		"name": String,
 		"path": String,
 		"params":  {
-		    "type": "Object",
-            "default": {}
-        }
+			"type": "Object",
+			"default": {}
+		}
 	}],
     "strict": Boolean
 });
