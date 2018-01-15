@@ -1,5 +1,7 @@
 const ChatNode = require('../ChatNode');
 const UnreachableNode = require('../Errors/UnreachableNode');
+const HistoryModel = require('../../Store/models/chatHistory.mdl');
+const bluebird = require('bluebird');
 
 class ChatGraph {
 	/**
@@ -11,21 +13,36 @@ class ChatGraph {
 	 * @param mode {boolean} - Controls free flow between chat nodes.
 	 * If true, nodes will transition on the basis of exitTo and exitFrom
 	 */
-	constructor ({ nodes, root = 'init', strict = true }) {
+	constructor ({ userId, nodes, root = 'init', strict = true }) {
 		this._nodes = nodes.map(node => new ChatNode(node));
 		this.graph = setupGraph(this._nodes);
 		this.active = this._getNodeByName(root);
-		this.history = [this._getNodeByName(root)];
-		this.strict = strict;
+        this.strict = strict;
+		return this._initHistory(userId, root);
 	}
 
+
+	_initHistory (userId, root) {
+	    const self = this;
+        return new bluebird((resolve, reject) => {
+            HistoryModel.push(userId, self._getNodeByName(root))
+                .then(data => {
+                    self.history = data;
+                    resolve(self);
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                })
+        })
+	}
 
 	/**
 	 * Transitions from a node to another are carried over by this method
 	 * @param name {string} - name of the new node
 	 * @param forced {boolean} - if strict is false, but strictness is to be enforced on a node level, set this flag to true
 	 */
-	go (name, forced = false) {
+	go (userId, name, forced = false) {
 		/** @type {ChatNode} */
 		const from = this.active;
 
@@ -42,9 +59,9 @@ class ChatGraph {
 			if (( this.strict || forced ) && from.exitTo.indexOf(name) === -1) {
 				throw new UnreachableNode(from.name, to.name);
 			}
-			ChatGraph.exitGuard(to, from, this._next({ defaultName: fromNodeName, exit: true }));
-			ChatGraph.entryGuard(to, from, this._next({ defaultName: toNodeName, entry: true }));
-			this.confirmNav(to, from);
+			ChatGraph.exitGuard(to, from, this._next(fromNodeName, userId));
+			ChatGraph.entryGuard(to, from, this._next(toNodeName, userId));
+			this.confirmNav(userId, to, from);
 		}
 	}
 
@@ -88,8 +105,10 @@ class ChatGraph {
 	 * Update the history with each transition.
 	 * @param node {ChatNode}
 	 */
-	historyUpdate (node) {
-		this.history.push(node);
+	historyUpdate (userId, node) {
+		// this.history.push(node);
+        const self = this;
+		return HistoryModel.push(userId, node);
 	}
 
 
@@ -103,6 +122,15 @@ class ChatGraph {
 		return this.graph[name].node;
 	}
 
+
+	_getNodeByProp (prop, val) {
+	    for (let nodeName of Object.keys(this.graph)) {
+	        if (this.graph[nodeName][prop] === val) {
+	            return this.graph[nodeName]
+            }
+        }
+        return null;
+    }
 
 	/**
 	 * @param name {string}
@@ -134,20 +162,12 @@ class ChatGraph {
 	 * Facilitates the transition from a node to another
 	 * Doesn't proceed with transition if node name is a boolean false.
 	 * @param defaultName {string}
-	 * @param [entry] {boolean}
-	 * @param [exit] {boolean}
 	 * @returns {Function}
 	 */
-	_next ({ defaultName, entry, exit }) {
-		const self = this;
-		return function (name, forced = false) {
-			if (name !== false && typeof name !== 'undefined' && name !== defaultName) {
-				self.go(name, forced);
-			} else {
-				name = (name !== false) ? defaultName : name;
-				self.setNodeByStateName(name, defaultName, exit, 'exitState');
-				self.setNodeByStateName(name, defaultName, entry, 'entryState');
-			}
+	_next (defaultName, userId) {
+	    const self = this;
+		return function (name = defaultName, id = userId) {
+		    return self.historyUpdate(id, self._getNodeByName(name));
 		}
 	}
 
@@ -210,11 +230,7 @@ class ChatGraph {
 function setupGraph (nodes) {
 	const graph = {};
 	for (let node of nodes) {
-		graph[node.name] = {
-			node,
-			exitState: false,
-			entryState: false
-		};
+		graph[node.name] = node;
 	}
 	return graph;
 }

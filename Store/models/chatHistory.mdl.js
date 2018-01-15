@@ -1,16 +1,43 @@
-const Schema = require('mongoose').Schema;
-const userSchema = require('./preferences.mdl');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const userSchema = require('./user.mdl');
 
-const chatSchema = new Schema({
-	"_user": { "type": Schema.ObjectId, "ref": userSchema },
+const historySchema = new Schema({
+	"_user": { "type": String, "ref": userSchema },
 	"history": [{
-		"route": String,
-		"params": String,
-		"timestamp": {
-			"type": Date,
-				"default": Date.now()
-			}
-	}]
+		"name": String,
+		"path": String,
+		"params":  {
+		    "type": "Object",
+            "default": {}
+        }
+	}],
+    "strict": Boolean
 });
 
-module.exports = chatSchema;
+historySchema.statics.active = function activeRoute (userId) {
+    return this.model('UserHistory').aggregate([
+        {
+            $match: {
+                '_user': userId
+            }
+        },
+        {
+            $project: {
+                active: {
+                    $arrayElemAt: [ "$history", -1 ]
+                }
+            }
+        }
+    ])
+};
+
+historySchema.statics.push = function updateHistory (userId, history) {
+    return this.model('UserHistory').update(
+        {"_user": userId },
+        { "$push": { "history": history }},
+        { "new": true, "upsert": true }
+     )
+};
+
+module.exports = mongoose.model('UserHistory', historySchema);
