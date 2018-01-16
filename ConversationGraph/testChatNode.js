@@ -41,6 +41,5 @@ const chatGraph = new ChatGraph({
 	})
 	.then(chatGraph => {
 		console.log(chatGraph.matchNodeWithQuery('/browse?item=12&age=5'));
-	})
-;
+	});
 
