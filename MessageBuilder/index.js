@@ -30,23 +30,29 @@ class MessageBuilder {
 	 * @param {object} data - The object which gets attached to the MessageBuilder instance.
 	 *
 	 * @param {object} deps - Meant for items whose values are depended on certain chat-flow.
+   *
+   * @param {object} methods - Methods that can be called to change the values held by data/deps.
 	 *
 	 * @param {function} build - Necessary to be implemented.
+   *
 	 * Guides which template from the map should be built.
 	 * Run conditional checks to select the appropriate template.
 	 */
 	constructor ({
 		templates,
-		data,
-		deps,
+		data = {},
+		deps = {},
+		methods = {},
 		build
 	}) {
 		this.templates = _getTemplates(templates);
 		this._attachData(data);
 		this._attachDeps(deps);
+		this._attachMethods(methods);
 		if (!build && typeof build !== 'function') throw new MethodRequiredError();
 		this.build = build;
 		this.variables = this._templateStrVarMap();
+		this.values = {}
 	}
 
 	/**
@@ -83,6 +89,13 @@ class MessageBuilder {
 		}
 	}
 
+
+	_attachMethods (methods) {
+    for (let key of Object.keys(methods)) {
+      this[key] = methods[key];
+    }
+  }
+
 	/**
 	 * Maps variables in a template to the key of the template
 	 * @returns {{}}
@@ -101,12 +114,19 @@ class MessageBuilder {
 	 * IMPORTANT: build method is called here, make sure it is implemented.
 	 */
 	exec () {
+	  for (let templateName of Object.keys(this.templates)) {
+      this.values[templateName] = this._resolveVariables(this.variables[templateName]);
+    }
 		const templateName = this.build() || 'default';
+    const unresolvedVariables = this.variables[templateName];
+    const resolvedVariables = this._resolveVariables(unresolvedVariables);
+
 		let templateStr = this.templates[templateName];
-		const unresolvedVariables = this.variables[templateName];
-		const resolvedVariables = this._resolveVariables(unresolvedVariables);
 		for (let key of Object.keys(resolvedVariables)) {
-			templateStr = templateStr.replace(unresolvedVariables[key], resolvedVariables[key]);
+			templateStr = templateStr.replace(
+			  unresolvedVariables[key],
+        this.values[templateName][key]
+      );
 		}
 		return _prepareRapids(templateStr);
 	}
@@ -120,9 +140,11 @@ class MessageBuilder {
 	 */
 	_resolveVariables (obj) {
 		const cloneObj = _.cloneDeep(obj);
+    console.log('cloneObj', cloneObj);
 		for (let key of Object.keys(obj)) {
+		  console.log('cloneObj', cloneObj, key);
 			if (this[key] === null) throw new UnresolvedVariableError(key);
-			cloneObj[key] = this[key];
+			cloneObj[key] = _.get(this, key);
 		}
 		return cloneObj;
 	}
@@ -191,7 +213,6 @@ function innerElCount (arr) {
  */
 function _prepareRapids (text) {
 	const sentences = text.split(/([.!?,]+)(?=[\w]+)/);
-	console.log(sentences, sentences.length);
 	return sentences.map(sentence => _rapidFireText(sentence))
 }
 

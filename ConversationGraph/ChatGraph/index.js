@@ -87,10 +87,10 @@ class ChatGraph {
 			return ChatGraph.exitGuard({ from, to })
 				.then(() => { return ChatGraph.entryGuard({ from, to }) })
 				.then(() => { return this.historyUpdate(userId, to) })
-				.then(() => { return bluebird.resolve(self); })
+				.then(() => { return bluebird.resolve(to); })
 				.catch(err => { console.error('error', err); });
 		} else {
-			return bluebird.resolve(self);
+			return bluebird.resolve(from);
 		}
 	}
 

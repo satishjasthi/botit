@@ -1,6 +1,8 @@
 const EventEmitter = require('events');
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const bluebird = require('bluebird');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
@@ -8,12 +10,17 @@ const sendTextMessage = require('./server/helper/sendTextMessage');
 const sendQuickReplies = require('./server/helper/sendQuickReplies');
 const sendLocationQuickReply = require('./server/helper/sendLocationQuickReply');
 
+mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
+mongoose.Promise = bluebird;
+
+
 class Bot extends EventEmitter {
 	
 	constructor (config) {
 		super();
 		this.config = config;
 		this.name = 'James Bot';
+		this.chat = null;
 		this._isVerified = false;
 		this.app = express();
 	}
@@ -56,11 +63,17 @@ class Bot extends EventEmitter {
 		sendLocationQuickReply.call(this, recipientId, { promptText })
 	}
 
-	init () {
-		this._setupServer();
-		this._verify();
-		this._testRoute();
-		this._receiveMessages();
+	init (chatFlowSetup) {
+	  const self = this;
+		self._setupServer();
+		self._verify();
+		self._testRoute();
+		self._receiveMessages();
+		return chatFlowSetup
+      .then(chatFlow => {
+        self.chat = chatFlow;
+        self.emit('chat-loaded', self);
+      });
 	}
 
 }
