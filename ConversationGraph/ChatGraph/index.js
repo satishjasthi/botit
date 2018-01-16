@@ -60,7 +60,7 @@ class ChatGraph {
 		return HistoryModel.active(userId)
 			.then(data => {
 				const from = data ? data[0].active.name : null;
-				if (from) { return self._go(userId, to, from, forced); }
+				if (from !== null) { return self._go(userId, to, from, forced); }
 				else { bluebird.reject('Invalid node'); }
 			})
 			.catch(err => { bluebird.reject(err) });
@@ -68,7 +68,7 @@ class ChatGraph {
 
 	/**
 	 * @description Transitions from a node to another are carried over by this method
-	 * @param {userId} userId - Transition is to be made for user with id = userId
+	 * @param {string} userId - Transition is to be made for user with id = userId
 	 * @param {string} toName - name of the new node
 	 * @param {string} fromName - name of the currently active node
 	 * @param forced {boolean} - if strict is false, but strictness is to be enforced on a node level, set this flag to true	 * @param userId
@@ -128,7 +128,7 @@ class ChatGraph {
 
 	/**
 	 * @description Update the history with each transition.
-	 * @userId {string} - Update history for user with id = userId
+	 * @param {string} userId - Update history for user with id = userId
 	 * @param node {ChatNode}
 	 */
 	historyUpdate (userId, node) {
