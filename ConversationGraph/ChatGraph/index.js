@@ -14,11 +14,10 @@ class ChatGraph {
 
 	  * @returns {ChatGraph} itself through promise
 	 */
-	constructor ({ userId, nodes, root = 'init', strict = true }) {
+	constructor ({ nodes, root = 'init', strict = true }) {
 		this._nodes = nodes.map(node => new ChatNode(node));
 		this.graph = setupGraph(this._nodes);
 		this.strict = strict;
-		return this._initHistory(userId, root);
 	}
 
 	/**
@@ -30,21 +29,19 @@ class ChatGraph {
 	_initHistory (userId, root) {
     const self = this;
 
-    return new bluebird((resolve, reject) => {
-      const rootNode = self._getNodeByName(root);
+    const rootNode = self._getNodeByName(root);
 
-      HistoryModel.push(userId, {
-        "name": rootNode.name,
-        "path": rootNode.path
-      }).then(() => {
-        resolve(self);
-      })
-      .catch(err => {
-        console.error(err);
-        reject(err);
-      })
-
+    return HistoryModel.push(userId, {
+      "name": rootNode.name,
+      "path": rootNode.path
+    }).then(() => {
+      return bluebird.resolve(self);
     })
+    .catch(err => {
+      console.error(err);
+      return bluebird.reject(err);
+    })
+
 	}
 
 	/**
@@ -54,14 +51,19 @@ class ChatGraph {
 	 * @param {boolean} [forced=false]
 	 * @returns {Promise|Promise.<T>}
 	 */
-	go (userId, to, forced = false) {
+	go (userId, to, forced = false, root = 'init') {
 		const self = this;
 
 		return HistoryModel.active(userId)
 			.then(data => {
-				const from = data ? data[0].active.name : null;
+				const from = (Array.isArray(data) && data.length > 0) ? data[0].active.name : null;
 				if (from !== null) { return self._go(userId, to, from, forced); }
-				else { bluebird.reject('Invalid node'); }
+				else {
+				  return this._initHistory(userId, root)
+            .then(() => {
+              return bluebird.resolve(this._getNodeByName(root))
+            })
+				}
 			})
 			.catch(err => { bluebird.reject(err) });
 	}
