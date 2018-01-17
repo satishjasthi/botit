@@ -4,9 +4,6 @@ const dataFetcher = require('../Data');
 /** Error to be thrown if the template is neither string or object */
 const InvalidTemplateError = require('./Errors/InvalidTemplateErrors');
 
-/** Error to be thrown if the variable has no value on the MessageBuilder instance */
-const UnresolvedVariableError = require('./Errors/UnresolvedVariablesErrors');
-
 /** Error to be thrown if the MessageBuilder instance does not implement a build() method */
 const MethodRequiredError = require('./Errors/MethodRequiredErrors');
 
@@ -115,39 +112,6 @@ class MessageBuilder {
 		return templateVarMap;
 	}
 
-	/**
-	 * This function adds the `data`/`deps` to a selected template
-	 * IMPORTANT: build method is called here, make sure it is implemented.
-	 */
-	$exec (templateName) {
-    const unresolvedVariables = this.variables[templateName];
-    const resolvedVariables = this._resolveVariables(unresolvedVariables);
-
-		let templateStr = this.templates[templateName];
-		for (let key of Object.keys(resolvedVariables)) {
-			templateStr = templateStr.replace(
-			  unresolvedVariables[key],
-        resolvedVariables[key]
-      );
-		}
-		return _prepareRapids(templateStr);
-	}
-
-	/**
-	 * Maps unresolved variables extracted from the template string
-	 * to their value from the MessageBuilder instance.
-	 * @param obj
-	 * @returns {*}
-	 * @private
-	 */
-	_resolveVariables (obj) {
-		const cloneObj = _.cloneDeep(obj);
-		for (let key of Object.keys(obj)) {
-			if (this[key] === null) throw new UnresolvedVariableError(key);
-			cloneObj[key] = _.get(this, key);
-		}
-		return cloneObj;
-	}
 
 	/**
 	 * Separates sentences by punctuation, returns an Array of word-groups for each sentence.
