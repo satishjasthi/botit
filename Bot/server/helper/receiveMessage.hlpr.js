@@ -1,4 +1,4 @@
-const sendTextMessage = require('../helper/sendTextMessage');
+const sendTextMessage = require('./sendMessage');
 
 module.exports = function receivedMessage(event) {
 	const senderID = event.sender.id;
