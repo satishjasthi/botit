@@ -75,7 +75,6 @@ class Bot extends EventEmitter {
 
 		fns.push(this._sendMessageViaBot.bind(this, recipientId, { ...message, text: lastText }));
 		bluebird.mapSeries(fns, function (fn) {
-			console.log(fn);
 			return fn();
 		})
 	}
