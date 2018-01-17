@@ -163,6 +163,9 @@ class MessageBuilder {
 		return sentences
 			.map(sentence => _rapidFireText(sentence))
 			.filter(sentence => sentence.length > 0)
+			.reduce((o, n) => {
+				return o.concat(n);
+			});
 	}
 
 }
@@ -204,7 +207,7 @@ function innerElCount (arr) {
  * total words present.
  *
  * @param {string} text
- * @returns {String}
+ * @returns {[String]}
  */
 function _rapidFireText (text) {
 	const words = text.trim().split(' ');
@@ -215,7 +218,7 @@ function _rapidFireText (text) {
 		rapids.push(words.slice(i, i + x));
 		i += x;
 	}
-	return rapids.map(rapid => rapid.join(' ')).join('... ');
+	return rapids.map(rapid => `${rapid.join(' ')}...`);
 }
 
 module.exports = MessageBuilder;
