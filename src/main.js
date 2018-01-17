@@ -4,24 +4,18 @@ const Bot = require('../Bot');
 const chatFlow = require('./router');
 const nodeMap = require('./map/index');
 
-const bot = new Bot();
+const bot = new Bot({ chatFlow });
 
-bot.init(chatFlow);
 
-bot.on('chat-loaded', ({ senderId = '1500', messageText = 'hey' }) => {
+bot.on('server-started', ({ senderId = '1500', messageText = 'hey' }) => {
   console.log('===== test mode active =====');
-  const { intent, entities } = {intent: 'greeting', entities: {}};
-  const nodeName = nodeMap(intent);
-  bot.chat.go(senderId, nodeName)
+  const { intent, entities } = { intent: 'greeting', entities: {} };
+  bot.chat.go(senderId, nodeMap(intent))
     .then(node => {
-      return node.message.getUserData(senderId)
-        .then(user => {
-          node.message.user = user;
-          return node.message;
-        })
+      return node.message.compile({ id: senderId, entities })
     })
-    .then(message => {
-      console.log(message.exec());
+    .then(data => {
+      console.log('bot.response', data);
     })
 });
 

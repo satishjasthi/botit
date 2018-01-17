@@ -1,7 +1,7 @@
 class MethodRequired extends TypeError {
 	constructor () {
 		super();
-		this.message = 'Method "build()" has to be implemented on the instance!';
+		this.message = 'Method "compile()" has to be implemented on the instance!';
 		this.name = 'MethodRequired';
 	}
 }

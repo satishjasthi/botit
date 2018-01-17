@@ -4,7 +4,6 @@ const GreetingDialog = require('../dialogs/greeting');
 
 const chat = new ChatGraph({
   mode: 'strict',
-  userId: '1500',
   nodes: [{
     name: 'init',
     path: '/',

@@ -17,7 +17,7 @@ mongoose.Promise = bluebird;
 
 class Bot extends EventEmitter {
 	
-	constructor (config) {
+	constructor ({ config, chatFlow }) {
 		super();
 		this.config = config;
 		this.name = 'James Bot';
@@ -25,6 +25,7 @@ class Bot extends EventEmitter {
 		this._isVerified = false;
 		this.fetch = dataFetcher;
 		this.app = express();
+		this._init(chatFlow);
 	}
 
 	_setupServer () {
@@ -65,17 +66,14 @@ class Bot extends EventEmitter {
 		sendLocationQuickReply.call(this, recipientId, { promptText })
 	}
 
-	init (chatFlowSetup) {
+	_init (chatFlow) {
 	  const self = this;
 		self._setupServer();
 		self._verify();
 		self._testRoute();
 		self._receiveMessages();
-		return chatFlowSetup
-      .then(chatFlow => {
-        self.chat = chatFlow;
-        self.emit('chat-loaded', self);
-      });
+		self.chat = chatFlow;
+    self.emit('chat-loaded', self);
 	}
 
 }
