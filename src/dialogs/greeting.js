@@ -5,7 +5,11 @@ const Greeting = new MessageBuilder({
   templates: {
     'default': function () {
       return {
-        'text': `Nice to meet you. ${ this.user.first_name } ${ this.user.last_name }`
+        'text': [
+        	`Nice to meet you. ${ this.user.first_name } ${ this.user.last_name }`,
+	        `Hey ${ this.user.first_name } ${ this.user.last_name }, have a good day!`,
+	        `Cheers!! ${ this.user.first_name } ${ this.user.last_name } hope to get to know you better`
+        ]
       }
     },
     'noFirstName': function () {
@@ -27,7 +31,7 @@ const Greeting = new MessageBuilder({
       this.user = user;
       const templateName = this.templateResolve();
       const message = this.templates[templateName]();
-      message.text = this.$prepareRapids(message.text);
+      message.text = this.$randomize(message.text);
       return message;
     },
     saveUserToDB (res) {
