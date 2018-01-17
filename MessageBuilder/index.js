@@ -211,7 +211,7 @@ function _rapidFireText (text) {
 	const rapids = [];
 	let i = 0, x = 0;
 	while (innerElCount(rapids) < words.length) {
-		x = _.random(4, words.length);
+		x = _.random(2, words.length);
 		rapids.push(words.slice(i, i + x));
 		i += x;
 	}
