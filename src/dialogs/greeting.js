@@ -5,8 +5,7 @@ const Greeting = new MessageBuilder({
   templates: {
     'default': function () {
       return {
-        'text': `Nice to meet you. ${ this.user.first_name } ${ this.user.last_name }`,
-        'quick_replies': []
+        'text': `Nice to meet you. ${ this.user.first_name } ${ this.user.last_name }`
       }
     },
     'noFirstName': function () {
@@ -23,7 +22,9 @@ const Greeting = new MessageBuilder({
     greetingTemplate (user) {
       this.user = user;
       const templateName = this.templateResolve();
-      return this.templates[templateName].call(this);
+      const message = this.templates[templateName]();
+      message.text = this.$prepareRapids(message.text);
+      return message;
     }
   },
   compile ({ id }) {

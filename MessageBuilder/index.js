@@ -34,7 +34,7 @@ class MessageBuilder {
    *
    * @param {object} methods - Methods that can be called to change the values held by data/deps.
 	 *
-	 * @param {function} build - Necessary to be implemented.
+	 * @param {function} compile - Necessary to be implemented.
    *
 	 * Guides which template from the map should be built.
 	 * Run conditional checks to select the appropriate template.
@@ -46,7 +46,8 @@ class MessageBuilder {
 		compile,
     templateResolve
 	}) {
-		this.templates = _getTemplates(templates);
+		this.templates = {};
+		this._bindTemplates(templates);
 		this._attachData(data);
 		this._attachMethods(methods);
 		this.fetch = dataFetcher;
@@ -54,7 +55,25 @@ class MessageBuilder {
 		this.compile = compile;
 		this.templateResolve = templateResolve;
 		this.variables = this._templateStrVarMap();
-		this.values = {}
+	}
+
+	/**
+	 * Get templates from the templates parameter provided at instance creation
+	 * templates must be object or string.
+	 *
+	 * Here a string passed as templates becomes an object of the form:
+	 * { 'default': <templateString> }
+	 *
+	 * @param {string} templates
+	 * @returns {*}
+	 */
+	_bindTemplates (templates) {
+		for (let templateName of Object.keys(templates)) {
+			if (typeof templates[templateName] !== 'function') {
+				throw new InvalidTemplateError(templateName, templates[templateName]);
+			}
+			this.templates[templateName] = templates[templateName].bind(this);
+		}
 	}
 
 	/**
@@ -130,6 +149,22 @@ class MessageBuilder {
 		return cloneObj;
 	}
 
+	/**
+	 * Separates sentences by punctuation, returns an Array of word-groups for each sentence.
+	 * This is to create an effect of multiple messages being sent, otherwise bots send
+	 * a message per request. This is purely a cosmetic feature, aims at realistic feel
+	 * of a bot.
+	 *
+	 * @param {string} text
+	 * @returns {Array}
+	 */
+	$prepareRapids (text) {
+		const sentences = text.split(/[.!?,]+/);
+		return sentences
+			.map(sentence => _rapidFireText(sentence))
+			.filter(sentence => sentence.length > 0)
+	}
+
 }
 
 
@@ -152,26 +187,6 @@ function _varFromTemplateString (templateStr) {
 
 
 /**
- * Get templates from the templates parameter provided at instance creation
- * templates must be object or string.
- *
- * Here a string passed as templates becomes an object of the form:
- * { 'default': <templateString> }
- *
- * @param {string} templates
- * @returns {*}
- */
-function _getTemplates (templates) {
-	if (typeof templates !== 'string' && typeof templates !== 'object') throw new InvalidTemplateError(templates);
-	return (typeof templates === 'object')
-		? templates
-		: (typeof templates === 'string')
-			? { 'default': templates }
-			: '';
-}
-
-
-/**
  * Calculates the number of elements inside a nested 2-D Array,
  * @param {Array} arr
  * @returns {number}
@@ -180,23 +195,6 @@ function innerElCount (arr) {
 	let len = 0;
 	for (let i of arr) { len += i.length }
 	return len;
-}
-
-
-/**
- * Separates sentences by punctuation, returns an Array of word-groups for each sentence.
- * This is to create an effect of multiple messages being sent, otherwise bots send
- * a message per request. This is purely a cosmetic feature, aims at realistic feel
- * of a bot.
- *
- * @param {string} text
- * @returns {Array}
- */
-function _prepareRapids (text) {
-	const sentences = text.split(/[.!?,]+/);
-	return sentences
-    .map(sentence => _rapidFireText(sentence))
-    .filter(sentence => sentence.length > 0)
 }
 
 
