@@ -7,7 +7,7 @@
     "start": "node app.js",
     "lint": "jshint --exclude node_modules .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bot": "nodemon Bot/testBot.js"
+    "bot": "nodemon src/main.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "express": "^4.13.4",
     "lodash": "^4.17.4",
     "mongoose": "^4.13.9",
+    "querystring": "^0.2.0",
     "redis": "^2.8.0",
     "request": "^2.72.0"
   },

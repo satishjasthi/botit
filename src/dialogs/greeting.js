@@ -9,10 +9,14 @@ const Greeting = new MessageBuilder({
       }
     },
     'noFirstName': function () {
-      return 'Hello there...'
+      return {
+        'text': 'Hello there...'
+      }
     },
     'noLastName': function () {
-      return `Nice to meet you ${ this.user.first_name }`
+      return {
+        'text': `Nice to meet you ${ this.user.first_name }`
+      }
     }
   },
   data: {
