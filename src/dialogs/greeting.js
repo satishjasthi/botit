@@ -25,12 +25,37 @@ const Greeting = new MessageBuilder({
       const message = this.templates[templateName]();
       message.text = this.$prepareRapids(message.text);
       return message;
+    },
+    saveUserToDB (res) {
+	    return this.fetch.$store.user.save(res.data);
+    },
+    getUserData (user) {
+	    this.user = user;
+	    return user;
+    },
+    errorHandler (err) {
+	    console.error(err);
+	    return null;
+    },
+    fetchUserIfNotFound (id, user) {
+	    if (!user) {
+		    return this.fetch.$http.get(
+			    `https://graph.facebook.com/v2.6/${id}?
+		        fields=first_name,last_name,profile_pic&
+		        access_token=${this._config.pageAccessToken}`
+		    )
+			    .then(this.saveUserToDB)
+			    .then(this.getUserData)
+			    .catch(this.errorHandler)
+	    } else {
+		    return user;
+	    }
     }
   },
   compile ({ id }) {
-    const self = this;
-    return self.fetch.$store.user.get(id)
-      .then(self.greetingTemplate)
+    return this.fetch.$store.user.get(id)
+      .then(this.fetchUserIfNotFound.bind(this, id))
+      .then(this.greetingTemplate)
       .catch(err => {
         console.error(err);
       })
