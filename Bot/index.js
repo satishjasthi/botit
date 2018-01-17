@@ -3,11 +3,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
-const _ = require('lodash');
+const querystring = require('querystring');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
-const sendMessage = require('./server/helper/sendMessage');
 const dataFetcher = require('../Data');
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
@@ -53,28 +52,40 @@ class Bot extends EventEmitter {
 		this._isVerified = state
 	}
 
+	_sendMessageViaBot (id, message) {
+		return this.fetch.$http.post(
+			'https://graph.facebook.com/v2.6/me/messages?' +
+			querystring.stringify({ access_token: this.config.pageAccessToken }),
+			{ recipient: { id }, message: message }
+		).then(res => {
+			return bluebird.resolve(res.data);
+		}).catch(err => {
+			console.error(err);
+			return bluebird.reject(err);
+		})
+	}
+
 	reply (recipientId, message) {
 		const textMessages = message.text.slice(0, -1) || [];
-		const lastText = message.text.slice(-1);
-		for (let textMessage of textMessages) {
-			sendMessage.call(this, recipientId, {
-				'text': textMessage
-			});
-		}
-		sendMessage.call(this, recipientId, {
-			...message,
-			text: lastText
+		const lastText = message.text.slice(-1)[0] || '...';
+
+		const fns = textMessages.map(textMessage => {
+			return this._sendMessageViaBot.bind(this, recipientId, { 'text': textMessage });
 		});
+
+		fns.push(this._sendMessageViaBot.bind(this, recipientId, { ...message, text: lastText }));
+		bluebird.mapSeries(fns, function (fn) {
+			console.log(fn);
+			return fn();
+		})
 	}
 	
 	_init (chatFlow) {
-	  const self = this;
-		self._setupServer();
-		self._verify();
-		self._testRoute();
-		self._receiveMessages();
-		self.chat = chatFlow;
-    self.emit('chat-loaded', self);
+		this._setupServer();
+		this._verify();
+		this._testRoute();
+		this._receiveMessages();
+		this.chat = chatFlow;
 	}
 
 }

@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const dataFetcher = require('../Data');
+const config = require('../config/default.json');
 
 /** Error to be thrown if the template is neither string or object */
 const InvalidTemplateError = require('./Errors/InvalidTemplateErrors');
@@ -43,6 +44,7 @@ class MessageBuilder {
 		compile,
     templateResolve
 	}) {
+		this._config = config;
 		this.templates = {};
 		this._bindTemplates(templates);
 		this._attachData(data);
