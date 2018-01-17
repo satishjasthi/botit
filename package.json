@@ -16,6 +16,7 @@
   "author": "Facebook",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.17.1",
     "bluebird": "^3.5.1",
     "body-parser": "^1.15.0",
     "config": "^1.29.0",
