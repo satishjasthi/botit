@@ -8,12 +8,6 @@ const InvalidTemplateError = require('./Errors/InvalidTemplateErrors');
 /** Error to be thrown if the MessageBuilder instance does not implement a build() method */
 const MethodRequiredError = require('./Errors/MethodRequiredErrors');
 
-/**
- * This regular expression is chosen to represent variables in template string.
- * example: 'This is a {{variable}}' - maps {{variable}} to this template string.
- * @type {RegExp}
- */
-const varPattern = new RegExp(/{{([^}]+)}}/g);
 
 /**
  * Message Builder class.
@@ -53,7 +47,6 @@ class MessageBuilder {
 		if (!compile && typeof compile !== 'function') throw new MethodRequiredError();
 		this.compile = compile;
 		this.templateResolve = templateResolve;
-		this.variables = this._templateStrVarMap();
 	}
 
 	/**
@@ -101,19 +94,6 @@ class MessageBuilder {
     }
   }
 
-	/**
-	 * Maps variables in a template to the key of the template
-	 * @returns {{}}
-	 * @private
-	 */
-	_templateStrVarMap () {
-		const templateVarMap = {};
-		for(let key of Object.keys(this.templates)) {
-			templateVarMap[key] = _varFromTemplateString(this.templates[key]);
-		}
-		return templateVarMap;
-	}
-
 
 	/**
 	 * Separates sentences by punctuation, returns an Array of word-groups for each sentence.
@@ -125,8 +105,8 @@ class MessageBuilder {
 	 * @returns {Array}
 	 */
 	$prepareRapids (text) {
-		const sentences = text.split(/[.!?,]+/);
-		return sentences
+		const sentences = text.split(/([.!?,]+)?=(\w+)/);
+		return (_.random(0, 100) > 55) ? [text] : sentences
 			.map(sentence => _rapidFireText(sentence))
 			.filter(sentence => sentence.length > 0)
 			.reduce((o, n) => {
@@ -134,24 +114,11 @@ class MessageBuilder {
 			});
 	}
 
-}
-
-
-/**
- * Extracts variables from a given template string.
- * Also stores the variable string for future replacement.
- *
- * @param {string} templateStr
- * @returns {{}}
- */
-function _varFromTemplateString (templateStr) {
-	const variables = {};
-	let match = varPattern.exec(templateStr);
-	while (match !== null) {
-		variables[match[1].trim()] = match[0];
-		match = varPattern.exec(templateStr);
+	$randomize (texts) {
+		if (typeof texts === 'string') return texts;
+		return this.$prepareRapids(texts[_.random(0, texts.length - 1)])
 	}
-	return variables;
+
 }
 
 
@@ -184,7 +151,10 @@ function _rapidFireText (text) {
 		rapids.push(words.slice(i, i + x));
 		i += x;
 	}
-	return rapids.map(rapid => `${rapid.join(' ')}...`);
+	return rapids.map(rapid => {
+		const jointRapid = (_.random(0, 100) > 80) ? rapid.join('... ') : rapid.join(' ');
+		return (_.random(0, 100) > 80) ? `${jointRapid}...` : jointRapid;
+	});
 }
 
 module.exports = MessageBuilder;
