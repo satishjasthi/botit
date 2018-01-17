@@ -9,6 +9,7 @@ const apiHandler = require('./server/apiHandlers/index');
 const sendTextMessage = require('./server/helper/sendTextMessage');
 const sendQuickReplies = require('./server/helper/sendQuickReplies');
 const sendLocationQuickReply = require('./server/helper/sendLocationQuickReply');
+const dataFetcher = require('../Data');
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
 mongoose.Promise = bluebird;
@@ -22,6 +23,7 @@ class Bot extends EventEmitter {
 		this.name = 'James Bot';
 		this.chat = null;
 		this._isVerified = false;
+		this.fetch = dataFetcher;
 		this.app = express();
 	}
 
