@@ -35,7 +35,8 @@ function _reject (err) {
  * @returns {Promise|*|Promise<T>}
  */
 function saveUser (userData) {
-  const user = new UserModel(userData);
+  const user = new UserModel({ ...userData, _id: userData.id });
+  console.log('schema view', user);
   return user.save()
     .then(_resolve)
     .catch(_reject);

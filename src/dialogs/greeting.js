@@ -9,10 +9,14 @@ const Greeting = new MessageBuilder({
       }
     },
     'noFirstName': function () {
-      return 'Hello there...'
+      return {
+        'text': 'Hello there...'
+      }
     },
     'noLastName': function () {
-      return `Nice to meet you ${ this.user.first_name }`
+      return {
+        'text': `Nice to meet you ${ this.user.first_name }`
+      }
     }
   },
   data: {
@@ -30,6 +34,24 @@ const Greeting = new MessageBuilder({
   compile ({ id }) {
     const self = this;
     return self.fetch.$store.user.get(id)
+      .then(user => {
+        if (!user) {
+          console.log('get profile for user', id, 'page token', this._config.pageAccessToken);
+	        return self.fetch.$http.get(
+		        `https://graph.facebook.com/v2.6/${id}?fields=first_name,last_name,profile_pic&access_token=${this._config.pageAccessToken}`
+	        ).then(res => {
+	          console.log(res.data);
+	          return self.fetch.$store.user.save(res.data);
+          }).then(user => {
+            self.user = user;
+            return user;
+          }).catch(err => {
+            return null;
+          })
+        } else {
+          return user;
+        }
+      })
       .then(self.greetingTemplate)
       .catch(err => {
         console.error(err);
