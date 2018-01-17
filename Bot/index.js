@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
+const _ = require('lodash');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
@@ -52,8 +53,18 @@ class Bot extends EventEmitter {
 		this._isVerified = state
 	}
 
-	reply (recipientId, messageText) {
-		sendMessage.call(this, recipientId, messageText);
+	reply (recipientId, message) {
+		const textMessages = message.text.slice(0, -1) || [];
+		const lastText = message.text.slice(-1);
+		for (let textMessage of textMessages) {
+			sendMessage.call(this, recipientId, {
+				'text': textMessage
+			});
+		}
+		sendMessage.call(this, recipientId, {
+			...message,
+			text: lastText
+		});
 	}
 	
 	_init (chatFlow) {
