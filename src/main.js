@@ -2,7 +2,6 @@ const bluebird = require('bluebird');
 const Bot = require('../Bot');
 const config = require('../config/default.json');
 const chatFlow = require('./router');
-const nodeMap = require('./map/index');
 
 const apiConf = {
 	baseURL: 'http://192.168.0.80:8080/api/resto'
@@ -13,7 +12,7 @@ const bot = new Bot({ chatFlow, config, apiConf });
 const getInference = res => {
 	const inference = res.data;
 	const { query, intent, entities } = inference;
-	const smallTalk = inference['small-talk'].reply;
+	const smallTalk = (inference['small-talk']) ? inference['small-talk'].reply : '';
 	return { query, intent, entities, smallTalk }
 };
 

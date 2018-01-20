@@ -1,4 +1,5 @@
 const ChatNode = require('../ChatNode');
+const MessageBuilder = require('../../MessageBuilder');
 const UnreachableNode = require('../Errors/UnreachableNode');
 const HistoryModel = require('../../Store/models/chatHistory.mdl');
 const bluebird = require('bluebird');
@@ -48,7 +49,9 @@ class ChatGraph {
 
 	_intentNodeMap (intent) {
 		const filterFn = nodeName => (this.graph[nodeName].intent === intent);
-		return Object.keys(this.graph).filter(filterFn).pop();
+		return Object.keys(this.graph)
+			.filter(filterFn)
+			.pop();
 	}
 
 	/**
@@ -64,6 +67,8 @@ class ChatGraph {
 		if (typeof to === 'object') {
 			to = this._intentNodeMap(to.intent);
 		}
+
+		console.log('to Node', to);
 
 		return HistoryModel.active(userId)
 			.then(data => {
@@ -93,9 +98,9 @@ class ChatGraph {
 		const self = this;
 		const from = this._getNodeByName(fromName);
 		const to = this._getNodeByName(toName);
-		const freeNode = (this.freeway.indexOf(to.name)) > -1;
-
-		if (from.name !== to.name) {
+		const freeNode = (this.freeway.indexOf(toName)) > -1;
+		console.log(freeNode, toName);
+		if (fromName !== toName) {
 			if (!freeNode && ( this.strict || forced ) && from.exitTo.indexOf(toName) === -1) {
 				return bluebird.reject(new UnreachableNode(from.name, to.name));
 			} else {
@@ -215,6 +220,7 @@ class ChatGraph {
 function setupGraph (nodes) {
 	const graph = {};
 	for (let node of nodes) {
+		node.message = new MessageBuilder(node.message);
 		graph[node.name] = node;
 	}
 	return graph;

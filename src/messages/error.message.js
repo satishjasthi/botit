@@ -1,24 +1,23 @@
-const MessageBuilder = require('../../MessageBuilder');
-
-const Greeting = new MessageBuilder({
+module.exports = {
 	type: 'text',
 	templates: {
 		'default': function () {
-			return { 'text': [`${this.smallTalk}`] }
+			return {
+				'text': [
+				`I feel terribly sick ${this.user.first_name}, I will talk to you soon.`,
+				'I don\'t think I am feeling well, I must get myself some rest.'
+			]}
 		}
 	},
 	data: {
 		'id': '',
-		'user': {},
-		'smallTalk': 'Hello!',
-		'entities': {}
+		'user': {}
 	},
 	methods: {
 		populateGreetingTemplate (user) {
 			this.user = user;
 			const templateName = this.templateResolve();
 			const message = this.templates[templateName]();
-			console.log(message.text);
 			message.text = this.$randomize(message.text);
 			return message;
 		},
@@ -62,6 +61,4 @@ const Greeting = new MessageBuilder({
 	templateResolve () {
 		return 'default';
 	}
-});
-
-module.exports = Greeting;
+};

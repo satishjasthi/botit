@@ -1,43 +1,42 @@
 const bluebird = require('bluebird');
 const ChatGraph = require('../../ConversationGraph/ChatGraph');
-const GreetingDialog = require('../dialogs/greeting');
-const BotIsSick = require('../dialogs/error');
+const message = require('../messages');
 
 const chat = new ChatGraph({
   mode: 'strict',
-  freeway: ['init', 'error'],
+  freeway: ['init', 'error', 'place-order', 'faq'],
   nodes: [{
     name: 'init',
     intent: 'OTHER',
     path: '',
-    message: GreetingDialog,
-    exitTo: ['browse', 'select']
+    message: message.greeting,
+    exitTo: ['browse']
   }, {
     name: 'browse',
     path: 'browse',
     intent: 'BROWSING',
-    message: 'see these things',
+    message: message.browse,
     exitTo: ['select']
   }, {
-    name: 'placeOrder',
+    name: 'place-order',
     path: 'order/place',
     intent: 'PLACE_ORDER',
-    message: 'see these things too'
+    message: message.placeOrder
   }, {
-    name: 'editOrder',
+    name: 'edit-order',
     path: 'order/edit',
     intent: 'EDIT_ORDER',
-    message: 'see'
+    message: message.editOrder
   }, {
     name: 'faq',
     path: 'faq',
     intent: 'FAQ',
-    message: 'see'
+    message: message.faq
   }, {
     name: 'error',
     path: 'error',
     intent: 'error',
-    message: BotIsSick,
+    message: message.botIsSick,
   }]
 });
 
