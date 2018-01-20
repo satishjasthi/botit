@@ -17,7 +17,7 @@ const chat = new ChatGraph({
     path: 'browse',
     intent: 'BROWSING',
     message: 'see these things',
-    exitTo: ['select', 'error']
+    exitTo: ['select']
   }, {
     name: 'placeOrder',
     path: 'order/place',

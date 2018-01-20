@@ -17,18 +17,26 @@ const getInference = res => {
 	return { query, intent, entities, smallTalk }
 };
 
+const compileNodeMessage = (senderID, entities, smallTalk, node) => {
+	return node.message.compile({ id: senderID, entities, smallTalk })
+};
+
+const sendMessage = (senderID, data) => {
+	console.log('bot.response', data, senderID);
+	bot.reply(senderID, data);
+};
+
+const botSpeakOnError = (senderID, err) => {
+	console.error(err);
+	botSpeak(senderID, { intent: 'error' })
+};
+
 const botSpeak = (senderID, inference) => {
 	const { query, intent, entities, smallTalk } = inference;
 	bot.chat.go(senderID, { intent })
-		.then(node => {
-			return node.message.compile({ id: senderID, entities, smallTalk })
-		})
-		.then(data => {
-			console.log('bot.response', data, senderID);
-			bot.reply(senderID, data);
-		}).catch(err => {
-			console.error(err);
-		});
+		.then(compileNodeMessage.bind(bot, senderID, entities, smallTalk))
+		.then(sendMessage.bind(bot, senderID))
+		.catch(botSpeakOnError);
 };
 
 bot.on('text-message', ({ senderID, messageText }) => {
@@ -39,9 +47,5 @@ bot.on('text-message', ({ senderID, messageText }) => {
 	bot.fetch.$http.get(`http://192.168.0.80:8080/api/resto/get_nlu?resto_name=menu1&query=${messageText}`)
 		.then(getInference)
 		.then(botSpeak.bind(bot, senderID))
-		.catch(err => {
-			console.error(err);
-			const intent = 'error';
-			botSpeak(senderID, {intent: 'error'})
-		});
+		.catch(botSpeakOnError);
 });
