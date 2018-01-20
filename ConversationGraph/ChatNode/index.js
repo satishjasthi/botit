@@ -15,6 +15,7 @@ class ChatNode {
 	 *
 	 * @param name - Name of the chat-node.
 	 * @param path - Name of the path.
+	 * @param intent - Name of the intent provided by AI/ML service.
 	 * @param message - The message to be sent when this node is visited.
 	 * @param exitTo - The nodes to which transition is allowed once this node is active.
 	 * @param beforeEnter - The function to be called before the node is entered
@@ -23,6 +24,7 @@ class ChatNode {
 	constructor ({
 		             name,
 		             path,
+								 intent,
 		             message,
 		             exitTo = [],
 		             beforeEnter = null,
@@ -32,7 +34,8 @@ class ChatNode {
 		validate('path', path);
 		validate('message', message);
 		this.name = name.trim().toLowerCase();
-		this.path = this.setPath(path);
+		this.intent = intent;
+		this.path = ChatNode.setPath(path);
 		this.message = message;
 		this.exitTo = exitTo;
 		this.params = null;
@@ -45,7 +48,7 @@ class ChatNode {
 	 * @param path
 	 * @returns {*}
 	 */
-	setPath (path) {
+	static setPath (path) {
 		path = path.trim().toLowerCase();
 		return (path[0] !== '/') ? `/${path}` : path;
 	}

@@ -9,7 +9,9 @@ function getAxiosInstance (axiosDefaults) {
   return axios;
 }
 
-module.exports = {
-  '$store': store,
-  '$http': axios
+module.exports = function (axiosDefaults) {
+  return {
+	  '$store': store,
+	  '$http': getAxiosInstance(axiosDefaults)
+  }
 };

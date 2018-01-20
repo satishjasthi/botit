@@ -15,13 +15,13 @@ mongoose.Promise = bluebird;
 
 class Bot extends EventEmitter {
 	
-	constructor ({ config, chatFlow }) {
+	constructor ({ config, chatFlow, apiConf }) {
 		super();
 		this.config = config;
 		this.name = 'James Bot';
 		this.chat = null;
 		this._isVerified = false;
-		this.fetch = dataFetcher;
+		this.fetch = dataFetcher(apiConf);
 		this.app = express();
 		this._init(chatFlow);
 	}

@@ -49,7 +49,7 @@ class MessageBuilder {
 		this._bindTemplates(templates);
 		this._attachData(data);
 		this._attachMethods(methods);
-		this.fetch = dataFetcher;
+		this.fetch = dataFetcher();
 		if (!compile && typeof compile !== 'function') throw new MethodRequiredError();
 		this.compile = compile;
 		this.templateResolve = templateResolve;

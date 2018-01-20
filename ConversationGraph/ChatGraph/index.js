@@ -44,18 +44,28 @@ class ChatGraph {
 
 	}
 
+	_intentNodeMap (intent) {
+		const filterFn = nodeName => (this.graph[nodeName].intent === intent);
+		return Object.keys(this.graph).filter(filterFn).pop();
+	}
+
 	/**
 	 * @description The exposed routing method, routes user to different ChatNodes if allowed
 	 * @param {string} userId
-	 * @param {string} to
+	 * @param {string|object} to
+	 * @param {string} to.intent
 	 * @param {boolean} [forced=false]
 	 * @returns {Promise|Promise.<T>}
 	 */
 	go (userId, to, forced = false, root = 'init') {
 		const self = this;
-
+		if (typeof to === 'object') {
+			to = this._intentNodeMap(to.intent);
+		}
+		console.log('go', to);
 		return HistoryModel.active(userId)
 			.then(data => {
+				console.log(data);
 				const from = (Array.isArray(data) && data.length > 0) ? data[0].active.name : null;
 				if (from !== null) { return self._go(userId, to, from, forced); }
 				else {

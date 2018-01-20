@@ -4,28 +4,19 @@ const Greeting = new MessageBuilder({
 	type: 'text',
 	templates: {
 		'default': function () {
-			return { 'text': [`${this.smallTalk}`] }
-		},
-		'noFirstName': function () {
 			return {
-				'text': 'Hello there...'
-			}
-		},
-		'noLastName': function () {
-			return {
-				'text': `Nice to meet you ${ this.user.first_name }`
-			}
+				'text': [
+				`I feel terribly sick ${this.user.first_name}, I will talk to you soon.`,
+				'I don\'t think I am feeling well, I must get myself some rest.'
+			]}
 		}
 	},
 	data: {
 		'id': '',
-		'user': {},
-		'smallTalk': 'Hello!',
-		'entities': {}
+		'user': {}
 	},
 	methods: {
 		populateGreetingTemplate (smallTalk, user) {
-			console.log(this);
 			this.user = user;
 			this.smallTalk = smallTalk;
 			const templateName = this.templateResolve();
