@@ -16,9 +16,8 @@ const Greeting = new MessageBuilder({
 		'user': {}
 	},
 	methods: {
-		populateGreetingTemplate (smallTalk, user) {
+		populateGreetingTemplate (user) {
 			this.user = user;
-			this.smallTalk = smallTalk;
 			const templateName = this.templateResolve();
 			const message = this.templates[templateName]();
 			message.text = this.$randomize(message.text);

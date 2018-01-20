@@ -9,13 +9,15 @@ class ChatGraph {
 	 * @param {string} userId - The userId of a user
 	 * @param nodes {Array<object>} - Number of nodes in the chat
 	 * @param root {string} - The first node in the conversation.
+	 * @param {[String]} freeway - The list of nodes that can be entered from any node.
 	 * @param strict {boolean} - Controls free flow between chat nodes.
 	 * If true, nodes will transition on the basis of exitTo and exitFrom
 
 	  * @returns {ChatGraph} itself through promise
 	 */
-	constructor ({ nodes, root = 'init', strict = true }) {
+	constructor ({ nodes, root = 'init', freeway = [], strict = true }) {
 		this._nodes = nodes.map(node => new ChatNode(node));
+		this.freeway = freeway;
 		this.graph = setupGraph(this._nodes);
 		this.strict = strict;
 	}
@@ -62,13 +64,13 @@ class ChatGraph {
 		if (typeof to === 'object') {
 			to = this._intentNodeMap(to.intent);
 		}
-		console.log('go', to);
+
 		return HistoryModel.active(userId)
 			.then(data => {
-				console.log(data);
 				const from = (Array.isArray(data) && data.length > 0) ? data[0].active.name : null;
-				if (from !== null) { return self._go(userId, to, from, forced); }
-				else {
+				if (from !== null) {
+					return self._go(userId, to, from, forced);
+				}	else {
 				  return this._initHistory(userId, root)
             .then(() => {
               return bluebird.resolve(this._getNodeByName(root))
@@ -91,16 +93,18 @@ class ChatGraph {
 		const self = this;
 		const from = this._getNodeByName(fromName);
 		const to = this._getNodeByName(toName);
+		const freeNode = (this.freeway.indexOf(to.name)) > -1;
 
 		if (from.name !== to.name) {
-			if (( this.strict || forced ) && from.exitTo.indexOf(toName) === -1) {
-				throw new UnreachableNode(from.name, to.name);
+			if (!freeNode && ( this.strict || forced ) && from.exitTo.indexOf(toName) === -1) {
+				return bluebird.reject(new UnreachableNode(from.name, to.name));
+			} else {
+				return ChatGraph.exitGuard({ from, to })
+					.then(() => { return ChatGraph.entryGuard({ from, to }) })
+					.then(() => { return this.historyUpdate(userId, to) })
+					.then(() => { return bluebird.resolve(to); })
+					.catch(err => { console.error('error', err); });
 			}
-			return ChatGraph.exitGuard({ from, to })
-				.then(() => { return ChatGraph.entryGuard({ from, to }) })
-				.then(() => { return this.historyUpdate(userId, to) })
-				.then(() => { return bluebird.resolve(to); })
-				.catch(err => { console.error('error', err); });
 		} else {
 			return bluebird.resolve(from);
 		}

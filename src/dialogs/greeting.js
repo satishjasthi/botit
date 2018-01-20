@@ -5,16 +5,6 @@ const Greeting = new MessageBuilder({
 	templates: {
 		'default': function () {
 			return { 'text': [`${this.smallTalk}`] }
-		},
-		'noFirstName': function () {
-			return {
-				'text': 'Hello there...'
-			}
-		},
-		'noLastName': function () {
-			return {
-				'text': `Nice to meet you ${ this.user.first_name }`
-			}
 		}
 	},
 	data: {
@@ -24,12 +14,11 @@ const Greeting = new MessageBuilder({
 		'entities': {}
 	},
 	methods: {
-		populateGreetingTemplate (smallTalk, user) {
-			console.log(this);
+		populateGreetingTemplate (user) {
 			this.user = user;
-			this.smallTalk = smallTalk;
 			const templateName = this.templateResolve();
 			const message = this.templates[templateName]();
+			console.log(message.text);
 			message.text = this.$randomize(message.text);
 			return message;
 		},

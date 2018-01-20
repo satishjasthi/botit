@@ -5,12 +5,13 @@ const BotIsSick = require('../dialogs/error');
 
 const chat = new ChatGraph({
   mode: 'strict',
+  freeway: ['init', 'error'],
   nodes: [{
     name: 'init',
     intent: 'OTHER',
     path: '',
     message: GreetingDialog,
-    exitTo: ['browse', 'select', 'error']
+    exitTo: ['browse', 'select']
   }, {
     name: 'browse',
     path: 'browse',
@@ -36,7 +37,7 @@ const chat = new ChatGraph({
     name: 'error',
     path: 'error',
     intent: 'error',
-    message: BotIsSick
+    message: BotIsSick,
   }]
 });
 

@@ -3,7 +3,6 @@ const receivedMessage = require('../helper/receiveMessage.hlpr');
 module.exports = function (req, res) {
 	const data = req.body;
 	const self = this;
-	console.log(req.path, JSON.stringify(data));
 	// Make sure this is a page subscription
 	if (data.object === 'page') {
 		// Iterate over each entry
