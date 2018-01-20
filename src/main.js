@@ -27,7 +27,7 @@ const sendMessage = (senderID, data) => {
 };
 
 const botSpeakOnError = (senderID, err) => {
-	console.error(err);
+	console.error('unreachable api', err);
 	botSpeak(senderID, { intent: 'error' })
 };
 
@@ -36,7 +36,7 @@ const botSpeak = (senderID, inference) => {
 	bot.chat.go(senderID, { intent })
 		.then(compileNodeMessage.bind(bot, senderID, entities, smallTalk))
 		.then(sendMessage.bind(bot, senderID))
-		.catch(botSpeakOnError);
+		.catch(botSpeakOnError.bind(bot, senderID));
 };
 
 bot.on('text-message', ({ senderID, messageText }) => {
@@ -47,5 +47,5 @@ bot.on('text-message', ({ senderID, messageText }) => {
 	bot.fetch.$http.get(`http://192.168.0.80:8080/api/resto/get_nlu?resto_name=menu1&query=${messageText}`)
 		.then(getInference)
 		.then(botSpeak.bind(bot, senderID))
-		.catch(botSpeakOnError);
+		.catch(botSpeakOnError.bind(bot, senderID));
 });
