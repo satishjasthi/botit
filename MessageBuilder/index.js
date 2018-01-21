@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const dataFetcher = require('../data');
+const dataFetcher = require('../src/data');
 const config = require('../config/default.json');
 
 /** Error to be thrown if the template is neither string or object */

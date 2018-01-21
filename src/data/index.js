@@ -1,5 +1,5 @@
 const axios = require('axios');
-const store = require('../store');
+const store = require('../store/index');
 
 /**
  * @description returns an axios instance

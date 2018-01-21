@@ -1,12 +1,7 @@
-const bluebird = require('bluebird');
 const Bot = require('../Bot');
 const config = require('../config/default.json');
 const chatFlow = require('./router');
-const dataFetch = require('../data');
-
-const apiConf = {
-	baseURL: 'http://192.168.0.80:8080/api/resto'
-};
+const dataFetch = require('./data');
 
 const bot = new Bot({ chatFlow, config, apiConf, dataFetch });
 
@@ -44,7 +39,7 @@ bot.on('text-message', ({ senderID, messageText }) => {
 	messageText = (typeof messageText === 'string') ? messageText.trim() : '';
 
 	console.log('inputs', senderID, messageText);
-	bot.fetch.$http.get(`http://192.168.0.80:8080/api/resto/get_nlu?resto_name=menu1&query=${messageText}`)
+	bot.fetch.$http.get(`http://some-service.com?query=${messageText}`)
 		.then(getInference)
 		.then(botSpeak.bind(bot, senderID))
 		.catch(botSpeakOnError.bind(bot, senderID));

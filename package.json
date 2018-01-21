@@ -1,13 +1,12 @@
 {
   "name": "messenger-get-started",
-  "version": "1.0.0",
-  "description": "Get started example for Messenger Platform",
-  "main": "app.js",
+  "version": "0.0.0",
+  "description": "Multiplatform chatbot creation framework.",
+  "main": "index.js",
   "scripts": {
-    "start": "node app.js",
     "lint": "jshint --exclude node_modules .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bot": "nodemon src/main.js"
+    "test-bot": "nodemon src/main.js"
   },
   "repository": {
     "type": "git",
@@ -19,20 +18,21 @@
     "axios": "^0.17.1",
     "bluebird": "^3.5.1",
     "body-parser": "^1.15.0",
+    "commander": "^2.13.0",
     "config": "^1.29.0",
     "ejs": "^2.4.2",
     "express": "^4.13.4",
+    "inquirer": "^5.0.1",
     "lodash": "^4.17.4",
     "mongoose": "^4.13.9",
-    "querystring": "^0.2.0",
-    "redis": "^2.8.0",
-    "request": "^2.72.0"
+    "querystring": "^0.2.0"
   },
   "engines": {
     "node": "~4.1.2"
   },
   "devDependencies": {
     "@types/express": "^4.11.0",
+    "jest": "^22.1.4",
     "nodemon": "^1.14.7"
   }
 }
