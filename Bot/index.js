@@ -7,7 +7,7 @@ const querystring = require('querystring');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
-const ChatGraph = require('../ConversationGraph/ChatGraph');
+const ChatGraph = require('../ChatGraph/ChatGraph');
 
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });

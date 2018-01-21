@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const userSchema = require('../../store/models/user.mdl');
+const userSchema = require('../../src/store/models/user.mdl');
 
 const historySchema = new Schema({
 	"_user": { "type": String, "ref": userSchema },
