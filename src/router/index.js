@@ -1,8 +1,6 @@
-const bluebird = require('bluebird');
-const ChatGraph = require('../../ConversationGraph/ChatGraph');
 const message = require('../messages');
 
-const chat = new ChatGraph({
+module.exports = {
   mode: 'strict',
   freeway: ['init', 'error', 'place-order', 'faq'],
   nodes: [{
@@ -38,7 +36,5 @@ const chat = new ChatGraph({
     intent: 'error',
     message: message.botIsSick,
   }]
-});
-
-module.exports = chat;
+};
 

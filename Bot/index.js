@@ -7,6 +7,7 @@ const querystring = require('querystring');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
+const ChatGraph = require('../ConversationGraph/ChatGraph');
 const dataFetcher = require('../Data');
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
@@ -84,7 +85,7 @@ class Bot extends EventEmitter {
 		this._verify();
 		this._testRoute();
 		this._receiveMessages();
-		this.chat = chatFlow;
+		this.chat = new ChatGraph(chatFlow);
 	}
 
 }
