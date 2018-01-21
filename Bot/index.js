@@ -8,7 +8,7 @@ const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
 const apiHandler = require('./server/apiHandlers/index');
 const ChatGraph = require('../ConversationGraph/ChatGraph');
-const dataFetcher = require('../Data');
+
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
 mongoose.Promise = bluebird;
@@ -27,12 +27,12 @@ class Bot extends EventEmitter {
 	 * @param {{}} apiConf - $http uses axios, apiConf is the
 	 * default configuration needed to be set on axios.
 	 */
-	constructor ({ config, chatFlow, apiConf }) {
+	constructor ({ config, chatFlow, apiConf, dataFetch }) {
 		super();
 		this.config = config;
 		this.name = 'James Bot';
 		this.chat = null;
-		this.fetch = dataFetcher(apiConf);
+		this.fetch = dataFetch(apiConf);
 		this.app = express();
 		this._init(chatFlow);
 	}

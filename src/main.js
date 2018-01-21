@@ -2,12 +2,13 @@ const bluebird = require('bluebird');
 const Bot = require('../Bot');
 const config = require('../config/default.json');
 const chatFlow = require('./router');
+const dataFetch = require('../data');
 
 const apiConf = {
 	baseURL: 'http://192.168.0.80:8080/api/resto'
 };
 
-const bot = new Bot({ chatFlow, config, apiConf });
+const bot = new Bot({ chatFlow, config, apiConf, dataFetch });
 
 const getInference = res => {
 	const inference = res.data;
