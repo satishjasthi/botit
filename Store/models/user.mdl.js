@@ -16,4 +16,35 @@ const userSchema = new Schema({
 	}
 });
 
-module.exports = mongoose.model('User', userSchema);
+const UserModel = mongoose.model('User', userSchema);
+
+/**
+ * @description save user data to database
+ * this should strictly be profile relevant data.
+ *
+ * @param {{}} userData
+ * @returns {Promise|*|Promise<T>}
+ */
+function save(userData) {
+	const user = new UserModel({ ...userData, _id: userData.id });
+	return user.save()
+		.then(user => user)
+		.catch(err => err);
+}
+
+
+/**
+ * @description Fetch profile data for a user with user-id = userId
+ * @param {String} userId
+ * @returns {Promise|*|Promise<T>}
+ */
+function get (userId) {
+	return UserModel.findById(userId)
+		.then(user => user)
+		.catch(err => err);
+}
+
+module.exports = {
+	get,
+	save
+};
