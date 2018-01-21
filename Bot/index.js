@@ -26,6 +26,11 @@ class Bot extends EventEmitter {
 	 *
 	 * @param {{}} apiConf - $http uses axios, apiConf is the
 	 * default configuration needed to be set on axios.
+	 *
+	 * @param {function} dataFetch - Function which returns an object with
+	 * properties:
+	 * $http: Uses Axios
+	 * $store: Wraps user's Mongoose models with functional interface.
 	 */
 	constructor ({ config, chatFlow, apiConf, dataFetch }) {
 		super();
