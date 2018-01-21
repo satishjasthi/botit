@@ -1,7 +1,7 @@
 const ChatNode = require('../ChatNode');
 const MessageBuilder = require('../../MessageBuilder');
 const UnreachableNode = require('../Errors/UnreachableNode');
-const HistoryModel = require('../../Store/models/chatHistory.mdl');
+const HistoryModel = require('./chatHistory.mdl');
 const bluebird = require('bluebird');
 
 class ChatGraph {

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const store = require('../Store');
+const store = require('../store');
 
 
 function getAxiosInstance (axiosDefaults) {
