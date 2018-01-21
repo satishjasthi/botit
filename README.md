@@ -1,36 +1,93 @@
-# Messenger Platform Sample -- node.js
+# botit
 
-This project is an example server for Messenger Platform built in Node.js. With this app, you can send it messages and it will echo them back to you. You can also see examples of the different types of Structured Messages. 
+Event driven chatbot client for node.js.
 
-It contains the following functionality:
+# Install
+Using npm:
 
-* Webhook (specifically for Messenger Platform events)
-* Send API 
-* Web Plugins
-* Messenger Platform v1.1 features
+```
+$ npm install botit
+```
 
-Follow the [walk-through](https://developers.facebook.com/docs/messenger-platform/quickstart) to learn about this project in more detail.
+# Example
+```javascript
+const Bot = require('botit');
+const config = require('../config/default.json');
+const chatFlow = require('./router');
+const dataFetch = require('./data');
 
-## Setup
 
-Set the values in `config/default.json` before running the sample. Descriptions of each parameter can be found in `app.js`. Alternatively, you can set the corresponding environment variables as defined in `app.js`.
+/* Create a bot instance */
+const bot = new Bot({
+  chatFlow, 
+  config, 
+  apiConf, 
+  dataFetch 
+});
 
-Replace values for `APP_ID` and `PAGE_ID` in `public/index.html`.
+/** Bot listens for text-messages from the user */
+bot.on('text-message', ({ senderID, messageText }) => {
+	messageText = (typeof messageText === 'string') 
+        ? messageText.trim() 
+        : '';
+    /**
+     * 1. Make an API call to your preferred service.
+     * 2. Get intents, entities for the message.
+     * 3. Find the appropriate chatnode and make the bot speak.
+     * 
+     * In case of any errors, the bot responds with a
+     * customizable error message!
+     */
+	bot.fetch.$http.get(`http://some-service.com?query=${messageText}`)
+		.then(getInference)
+		.then(botSpeak.bind(bot, senderID))
+		.catch(botSpeakOnError.bind(bot, senderID));
+});
 
-## Run
 
-You can start the server by running `npm start`. However, the webhook must be at a public URL that the Facebook servers can reach. Therefore, running the server locally on your machine will not work.
+/**
+ * Handler gets inference from an API service
+ */
+function getInference (res) {
+	const inference = res.data;
+	const { intent, entities } = inference;
+	return { intent, entities }
+}
 
-You can run this example on a cloud service provider like Heroku, Google Cloud Platform or AWS. Note that webhooks must have a valid SSL certificate, signed by a certificate authority. Read more about setting up SSL for a [Webhook](https://developers.facebook.com/docs/graph-api/webhooks#setup).
+/**
+ * After matching the intent with a node,
+ * compile the message to provide the message templates
+ * the variables needed.
+ */
+function compileNodeMessage (senderID, entities, smallTalk, node) {
+	return node.message.compile({ id: senderID, entities, smallTalk })
+}
 
-## Webhook
+/**
+ * Send message via bot!
+ */
+function sendMessage (senderID, data) {
+	console.log('bot.response', data, senderID);
+	bot.reply(senderID, data);
+}
 
-All webhook code is in `app.js`. It is routed to `/webhook`. This project handles callbacks for authentication, messages, delivery confirmation and postbacks. More details are available at the [reference docs](https://developers.facebook.com/docs/messenger-platform/webhook-reference).
+/**
+ * Handles errors in-case any
+ */
+function botSpeakOnError (senderID, err) {
+	console.error('unreachable api', err);
+	botSpeak(senderID, { intent: 'error' })
+}
 
-## "Send to Messenger" and "Message Us" Plugin
-
-An example of the "Send to Messenger" plugin and "Message Us" plugin are located at `index.html`. The "Send to Messenger" plugin can be used to trigger an authentication event. More details are available at the [reference docs](https://developers.facebook.com/docs/messenger-platform/plugin-reference).
-
-## License
-
-See the LICENSE file in the root directory of this source tree. Feel free to use and modify the code.
+/**
+ * With the inference provided, route the chat to
+ * the node with the inferred intent.
+ */
+function botSpeak (senderID, inference) {
+	const { intent, entities } = inference;
+	bot.chat.go(senderID, { intent })
+		.then(compileNodeMessage.bind(bot, senderID, entities))
+		.then(sendMessage.bind(bot, senderID))
+		.catch(botSpeakOnError.bind(bot, senderID));
+}
+```
