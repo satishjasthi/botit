@@ -8,13 +8,13 @@ class ChatGraph {
 	/**
 	 * @description This creates the basic unit of a chat-flow.
 	 * @param {string} userId - The userId of a user
-	 * @param nodes {Array<object>} - Number of nodes in the chat
+	 * @param nodes {[object]} - Number of nodes in the chat
 	 * @param root {string} - The first node in the conversation.
 	 * @param {[String]} freeway - The list of nodes that can be entered from any node.
 	 * @param strict {boolean} - Controls free flow between chat nodes.
 	 * If true, nodes will transition on the basis of exitTo and exitFrom
 
-	  * @returns {ChatGraph} itself through promise
+	 * @returns {ChatGraph} itself through promise
 	 */
 	constructor ({ nodes, root = 'init', freeway = [], strict = true }) {
 		this._nodes = nodes.map(node => new ChatNode(node));
@@ -47,6 +47,15 @@ class ChatGraph {
 
 	}
 
+	/**
+	 * @description An intent from an AI/ML service can be mapped to a node
+	 * with the intent property on the node.
+	 * If this method is provided the intent, it returns the matching node.
+	 *
+	 * @param intent
+	 * @returns {*}
+	 * @private
+	 */
 	_intentNodeMap (intent) {
 		const filterFn = nodeName => (this.graph[nodeName].intent === intent);
 		return Object.keys(this.graph)

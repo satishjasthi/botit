@@ -52,48 +52,6 @@ class ChatNode {
 		path = path.trim().toLowerCase();
 		return (path[0] !== '/') ? `/${path}` : path;
 	}
-
-	/**
-	 * Get query params from the path and set the params property.
-	 * @param path
-	 */
-	setParams (path) {
-		this.params = extractParams(path);
-	}
-
-	/**
-	 * Set the message object
-	 * @param message
-	 */
-	setMessage (message) {
-		this.message = message;
-	}
-
-
-	/**
-	 * Chat node entry guard
-	 * @param to {ChatNode}
-	 * @param from {ChatNode}
-	 * @param next {function}
-	 * @returns {boolean | undefined}
-	 */
-	beforeNodeEnter (to, from, next) {
-		if (!this.beforeEnter) return true;
-		this.beforeEnter.call(this, to, from, next);
-	}
-
-
-	/**
-	 * Chat node exit guard
-	 * @param to {ChatNode}
-	 * @param from {ChatNode}
-	 * @param next {function}
-	 * @returns {boolean | undefined}
-	 */
-	beforeNodeExit (to, from, next) {
-		if (!this.beforeExit) return true;
-		this.beforeExit.call(this, to, from, next);
-	}
 }
 
 

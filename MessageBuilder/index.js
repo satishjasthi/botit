@@ -12,7 +12,7 @@ const MethodRequiredError = require('./Errors/MethodRequiredErrors');
 /**
  * Message Builder class.
  * This helps in common message creation methods/helpers, inspired from vue.js
- * IMPORTANT: instances must have a build method implemented!
+ * IMPORTANT: instances must have a compile method implemented!
  */
 class MessageBuilder {
 
@@ -50,7 +50,7 @@ class MessageBuilder {
 	}
 
 	/**
-	 * Get templates from the templates parameter provided at instance creation
+	 * @description Get templates from the templates parameter provided at instance creation
 	 * templates must be object or string.
 	 *
 	 * Here a string passed as templates becomes an object of the form:
@@ -69,14 +69,9 @@ class MessageBuilder {
 	}
 
 	/**
-	 * A key value pair provided for variables that are not known at the time
-	 * of flow creation but known once a user starts interaction but not if
-	 * evaluation cannot happen unless certain chat conditions are met.
-	 * Use `deps` instead for such cases.
-	 *
+	 * @description A key(string) value(Any) pair provided for variables that are not known at the time
+	 * of flow creation but known once a user starts interaction.
 	 * The key:values are attached to the MessageBuilder instance.
-	 *
-	 * If there is a common property declared in `data` and `deps`, then `deps` takes precedence.
 	 *
 	 * @param {object} data
 	 * @private
@@ -88,6 +83,14 @@ class MessageBuilder {
 	}
 
 
+	/**
+	 * @description A key(string) value(function) pair provided for methods that can be used for simplification
+	 * of compile method, fetching/storing data.
+	 * The key:values are attached to the MessageBuilder instance.
+	 *
+	 * @param methods
+	 * @private
+	 */
 	_attachMethods (methods) {
     for (let key of Object.keys(methods)) {
       this[key] = methods[key].bind(this);
@@ -96,7 +99,7 @@ class MessageBuilder {
 
 
 	/**
-	 * Separates sentences by punctuation, returns an Array of word-groups for each sentence.
+	 * @description Separates sentences by punctuation, returns an Array of word-groups for each sentence.
 	 * This is to create an effect of multiple messages being sent, otherwise bots send
 	 * a message per request. This is purely a cosmetic feature, aims at realistic feel
 	 * of a bot.
@@ -114,6 +117,13 @@ class MessageBuilder {
 			});
 	}
 
+	/**
+	 * @description A message template may have multiple messages
+	 * $randomize selects one out of the many and creates rapids.
+	 *
+	 * @param texts
+	 * @returns {*}
+	 */
 	$randomize (texts) {
 		if (typeof texts === 'string') return texts;
 		return this.$prepareRapids(texts[_.random(0, texts.length - 1)])
@@ -123,7 +133,7 @@ class MessageBuilder {
 
 
 /**
- * Calculates the number of elements inside a nested 2-D Array,
+ * @description Calculates the number of elements inside a nested 2-D Array,
  * @param {Array} arr
  * @returns {number}
  */
@@ -135,7 +145,7 @@ function innerElCount (arr) {
 
 
 /**
- * Returns groups of words arranged in a random order, where
+ * @description Returns groups of words arranged in a random order, where
  * the smallest possible word group is of 2 words, and maximum of
  * total words present.
  *
