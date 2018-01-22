@@ -2,8 +2,20 @@ const Bot = require('../Bot');
 const config = require('../config/default.json');
 const chatFlow = require('./router');
 const dataFetch = require('./data');
+const querystring = require('querystring');
 
-const bot = new Bot({ chatFlow, config, apiConf, dataFetch });
+const bot = new Bot({
+	chatFlow,
+	config,
+	apiConf,
+	dataFetch,
+	receivers: [{
+		method: 'post',
+		path: '/',
+		handler: this.fbApiHandler.messageReceiver
+	}],
+  responder: this.sendMessagetoFB
+});
 
 const getInference = res => {
 	const inference = res.data;

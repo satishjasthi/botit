@@ -6,9 +6,9 @@ const bluebird = require('bluebird');
 const querystring = require('querystring');
 const verifyRequestSignature = require('./verifyRequestSignature');
 const listenServer = require('./server/helper');
-const apiHandler = require('./server/apiHandlers/index');
+const fbApiHandler = require('./server/fbApiHandlers/index');
 const ChatGraph = require('../ChatGraph/ChatGraph');
-
+const PLATFORMS = require('./constants');
 
 mongoose.connect('mongodb://localhost/test', { useMongoClient: true });
 mongoose.Promise = bluebird;
@@ -18,6 +18,9 @@ class Bot extends EventEmitter {
 
 	/**
 	 * @description Creates a bot instance
+   *
+   * @param {string} platform - Platform on which the bot interaction happens
+   *
 	 * @param {{}} config - Application config, contains info about credentials to connect
 	 * with the platform on which the bot is to be linked.
 	 *
@@ -31,15 +34,32 @@ class Bot extends EventEmitter {
 	 * properties:
 	 * $http: Uses Axios
 	 * $store: Wraps user's Mongoose models with functional interface.
+   *
+   * @param {[{}]|{}} receivers - list of configuration objects that need
+   * to listen on incoming messages and emit events.
+   *
+   * @param {{}} responders - Configuration specifying response method
+   * to incoming messages.
 	 */
-	constructor ({ config, chatFlow, apiConf, dataFetch }) {
+	constructor ({
+    platform,
+    config,
+    chatFlow,
+    apiConf,
+    dataFetch,
+    receivers,
+    responder
+	}) {
 		super();
+		this.platform = platform;
 		this.config = config;
-		this.name = 'James Bot';
 		this.chat = null;
 		this.fetch = dataFetch(apiConf);
 		this.app = express();
-		this._init(chatFlow);
+    this.fbApiHandler = fbApiHandler;
+    this.receivers = (Array.isArray(receivers)) ? receivers : [receivers];
+    this.responder = responder.bind(this);
+    this._init(chatFlow);
 	}
 
 	/**
@@ -57,20 +77,26 @@ class Bot extends EventEmitter {
 	 * @description Adds a verification route.
 	 * @private
 	 */
-	_verify () {
+	_verifyFBApp () {
 		const self = this;
-		self.app.get('/', apiHandler.verifyWebhook.bind(self));
+		self.app.get('/', fbApiHandler.verifyWebhook.bind(self));
 	}
 
 	/**
 	 * @description Adds a route to receive messages.
 	 * @private
 	 */
-	_receiveMessages () {
-		const self = this;
-		self.app.post('/', apiHandler.messageReceiver.bind(self));
+	_setupReceiver ({ method, path, handler }) {
+		this.app[method](path, handler.bind(this));
 	}
 
+  /**
+   * @description Setup all receiver methods.
+   * @private
+   */
+	_setupReceivers () {
+	  this.receivers.forEach(receiver => this._setupReceiver(receiver));
+  }
 
 	/**
 	 * @description Messenger bots receive messages when a POST request
@@ -88,7 +114,7 @@ class Bot extends EventEmitter {
 	 * @returns {Promise|Promise.<T>}
 	 * @private
 	 */
-	_sendMessageViaBot (id, message) {
+	sendMessagetoFB (id, message) {
 		return this.fetch.$http.post(
 			'https://graph.facebook.com/v2.6/me/messages?' +
 			querystring.stringify({ access_token: this.config.pageAccessToken }),
@@ -129,10 +155,10 @@ class Bot extends EventEmitter {
 		const lastText = message.text.slice(-1)[0] || '...';
 
 		const fns = textMessages.map(textMessage => {
-			return this._sendMessageViaBot.bind(this, recipientId, { 'text': textMessage });
+			return this.responder.bind(this, recipientId, { 'text': textMessage });
 		});
 
-		fns.push(this._sendMessageViaBot.bind(this, recipientId, { ...message, text: lastText }));
+		fns.push(this.responder.bind(this, recipientId, { ...message, text: lastText }));
 		bluebird.mapSeries(fns, function (fn) {
 			return fn();
 		})
@@ -149,8 +175,10 @@ class Bot extends EventEmitter {
 	 */
 	_init (chatFlow) {
 		this._setupServer();
-		this._verify();
-		this._receiveMessages();
+		if (this.platform === PLATFORMS.FACEBOOK) {
+      this._verifyFBApp();
+    }
+    this._setupReceivers();
 		this.chat = new ChatGraph(chatFlow);
 	}
 
